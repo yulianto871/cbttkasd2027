@@ -140,24 +140,28 @@ if(!p){$('#app').innerHTML=`<div class="card form"><div class="mascot">🦉</div
 <label class="f">🎒 Kelas</label><input id="d_c" placeholder="contoh: 6A">
 <p style="text-align:center"><button class="btn lg" onclick="daftar()">Daftar & Lanjut 🚀</button></p></div>`;return}
 $('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 Halo, ${esc(p.nama)}!</h2><span class="hint">${esc(p.sekolah)} · Kelas ${esc(p.kelas)} · Kec. ${esc(p.kecamatan)}</span></div><button class="b2 sm" onclick="S.peserta=null;vDaftar()">Ganti peserta</button></div><p class="hint" style="font-size:16px">Pilih paket soal yang sudah terbuka, lalu kerjakan dengan teliti ya! 💪</p><div id="pk">Memuat paket…</div>`;
-T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;
+T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;if(d.cfg)S.cfg=d.cfg;
 $('#pk').innerHTML=MAPEL.map((m,mi)=>`<div class="mp m${mi+1}"><div class="mh"><span class="ic">${mi?'📚':'📐'}</span><h3>${m}</h3></div><div class="pgd">${d.paket.filter(x=>x.mapel==m).map(x=>{const done=d.selesai.includes(x.id),ok=x.rilis&&x.jml>0;
 return `<div class="pc ${done?'done':ok?'':'off'}"><div class="no">${ok||done?x.nomor:'🔒'}</div><b>${esc(x.judul)}</b><small>${x.jml} soal · ${x.durasi} menit</small>${done?'<em>✅ Sudah selesai</em>':ok?`<button class="btn sm" onclick="intro(${x.id})">Kerjakan 🚀</button>`:'<em>Belum dibuka</em>'}</div>`}).join('')}</div></div>`).join('')})}
 function daftar(){T(async()=>{S.peserta=await call('daftar',{nama:$('#d_n').value,kecamatan:$('#d_k').value,sekolah:$('#d_s').value,kelas:$('#d_c').value});toast('Pendaftaran berhasil');vDaftar()})}
+const TF=v=>v===true||v===1||v==='t'||v==='true'||v==='1';
+function acakMap(){try{const m=JSON.parse(S.cfg.acak_paket||'{}');return m&&typeof m=='object'?m:{}}catch(e){return{}}}
+function acakOf(x,extra){let s=false,o=false;[x,extra].forEach(r=>Object.keys(r||{}).forEach(k=>{const n=k.replace(/[_\s]/g,'');if(/^acak(nomor)?soal$/i.test(n)&&TF(r[k]))s=true;if(/^acak(opsi|pilihan|jawaban)$/i.test(n)&&TF(r[k]))o=true}));
+const m=acakMap()[x&&x.id];if(m){if(m.s)s=true;if(m.o)o=true}return{s,o}}
 const MX=()=>{const v=parseInt(S.cfg.maxPelanggaran);return isNaN(v)?3:v};
 function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(crypto.getRandomValues(new Uint32Array(1))[0]/4294967296*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function intro(id){const x=S.pkt.find(p=>p.id==id),mx=MX();
 $('#app').innerHTML=`<div class="card intro" style="max-width:640px;margin:auto"><div class="mascot">🦉</div><h2 style="text-align:center">Siap mengerjakan?</h2><p class="sub" style="text-align:center;color:var(--r)">${esc(x.mapel)} – ${esc(x.judul)}</p>
 <p style="text-align:center"><span class="pill pub">📝 ${x.jml} soal</span> <span class="pill pub">⏰ ${x.durasi} menit</span> <span class="pill pub">1️⃣ hanya satu kali</span></p><ul style="line-height:1.8">
 <li>Waktu berjalan sejak tombol Mulai ditekan dan tetap berjalan walau halaman dimuat ulang.</li>
-${x.acakSoal||x.acakOpsi?'<li>Urutan soal dan/atau pilihan jawaban diacak, jadi tiap teman mendapat urutan yang berbeda.</li>':''}
+${(()=>{const a=acakOf(x);return a.s||a.o})()?'<li>Urutan soal dan/atau pilihan jawaban diacak, jadi tiap teman mendapat urutan yang berbeda.</li>':''}
 ${mx>0?`<li>Tes berjalan dalam layar penuh. Tetap di halaman tes ya! Berpindah tab/jendela, keluar layar penuh, atau menyalin/menempel akan <b>dicatat sebagai pelanggaran</b>.</li><li>Pada pelanggaran ke-${mx}, jawabanmu otomatis dikirim.</li>`:''}<li>Kerjakan dengan jujur dan teliti. Kamu pasti bisa! 💪</li></ul>
 <div class="row"><button class="b2" onclick="vDaftar()">⬅ Kembali</button><button class="btn lg" onclick="mulai(${id})">Mulai Sekarang 🚀</button></div></div>`}
 function goFs(){const el=document.documentElement;if(TS&&TS.on&&MX()>0&&el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().catch(()=>{})}
 function mulai(id){const el=document.documentElement;if(MX()>0&&el.requestFullscreen)el.requestFullscreen().catch(()=>{});
 T(async()=>{let d;try{d=await call('ambil_tes',{paket_id:id,peserta_id:S.peserta.id})}catch(e){if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});throw e}
 const tf=v=>v===true||v===1||v==='t'||v==='true'||v==='1',base=S.pkt.find(p=>p.id==id)||{},dp=d.paket||{},pk=Object.assign({},base,dp);
-const aSoal=tf(dp.acakSoal)||tf(dp.acak_soal)||tf(base.acakSoal),aOpsi=tf(dp.acakOpsi)||tf(dp.acak_opsi)||tf(base.acakOpsi);
+const ak=acakOf(Object.assign({},base,dp,{id}),d),aSoal=ak.s,aOpsi=ak.o;console.log('acak',aSoal,aOpsi,Object.keys(dp));
 let soal=d.soal.map(q=>Object.assign(q,{perm:q.opsi.map((_,i)=>i)}));
 const ok='ord_'+id+'_'+S.peserta.id;let sv=null;try{sv=JSON.parse(sessionStorage.getItem(ok))}catch(e){}
 if(sv&&Array.isArray(sv.s)&&sv.s.length==soal.length){const m={};soal.forEach(q=>m[String(q.id)]=q);const ord=sv.s.map(x=>m[String(x)]);
@@ -253,10 +257,15 @@ $('#app').innerHTML=`<div class="row"><h2>Panel Admin <span class="pill">${esc(S
 T(async()=>{await({paket:aPaket,soal:aSoal,cfg:aCfg,hasil:aHasil,agt:aAgt})[t]()})}
 
 /* -- Paket & rilis -- */
-async function aPaket(){const d=await call('publik');S.pkt=d.paket;
-$('#ap').innerHTML=`<p class="hint">Murid hanya dapat mengerjakan paket yang berstatus <b>Dirilis</b>. Paket harus memiliki soal sebelum dirilis.</p>`+MAPEL.map(m=>`<div class="card tw"><h3>${m}</h3><table><tr><th>Paket</th><th>Judul</th><th>Durasi (mnt)</th><th>Soal</th><th>Acak soal</th><th>Acak opsi</th><th>Status</th><th>Aksi</th></tr>${d.paket.filter(x=>x.mapel==m).map(x=>`<tr><td>${x.nomor}</td><td><input id="pj${x.id}" value="${esc(x.judul)}"></td><td><input id="pd${x.id}" type="number" min="1" value="${x.durasi}" style="width:80px"></td><td>${x.jml}</td><td><input type="checkbox" id="as${x.id}" ${x.acakSoal?'checked':''}></td><td><input type="checkbox" id="ao${x.id}" ${x.acakOpsi?'checked':''}></td><td><span class="pill ${x.rilis?'pub':''}">${x.rilis?'Dirilis':'Belum dirilis'}</span></td>
+async function aPaket(){const d=await call('publik');S.pkt=d.paket;S.cfg=d.cfg||S.cfg;
+$('#ap').innerHTML=`<p class="hint">Murid hanya dapat mengerjakan paket yang berstatus <b>Dirilis</b>. Paket harus memiliki soal sebelum dirilis.</p>`+MAPEL.map(m=>`<div class="card tw"><h3>${m}</h3><table><tr><th>Paket</th><th>Judul</th><th>Durasi (mnt)</th><th>Soal</th><th>Acak soal</th><th>Acak opsi</th><th>Status</th><th>Aksi</th></tr>${d.paket.filter(x=>x.mapel==m).map(x=>`<tr><td>${x.nomor}</td><td><input id="pj${x.id}" value="${esc(x.judul)}"></td><td><input id="pd${x.id}" type="number" min="1" value="${x.durasi}" style="width:80px"></td><td>${x.jml}</td><td><input type="checkbox" id="as${x.id}" ${acakOf(x).s?'checked':''}></td><td><input type="checkbox" id="ao${x.id}" ${acakOf(x).o?'checked':''}></td><td><span class="pill ${x.rilis?'pub':''}">${x.rilis?'Dirilis':'Belum dirilis'}</span></td>
 <td><button class="${x.rilis?'b2':'btn'} sm" onclick="rilis(${x.id},${!x.rilis})">${x.rilis?'Tutup Tes':'Rilis Tes'}</button> <button class="b2 sm" onclick="svP(${x.id})">Simpan</button> <button class="b2 sm" onclick="kelola(${x.id})">Kelola Soal</button> <button class="b2 sm" onclick="resetP(${x.id})">Reset Nilai</button></td></tr>`).join('')}</table></div>`).join('')}
-function svP(id){T(async()=>{await call('paket_set',{id,judul:$('#pj'+id).value,durasi:+$('#pd'+id).value,acakSoal:$('#as'+id).checked,acakOpsi:$('#ao'+id).checked});toast('Paket disimpan');aPaket()})}
+function svP(id){T(async()=>{const as=$('#as'+id).checked,ao=$('#ao'+id).checked;
+await call('paket_set',{id,judul:$('#pj'+id).value,durasi:+$('#pd'+id).value,acakSoal:as,acakOpsi:ao,acak_soal:as,acak_opsi:ao,acaksoal:as,acakopsi:ao});
+const m=acakMap();m[id]={s:as,o:ao};const nc=Object.assign({},S.cfg,{acak_paket:JSON.stringify(m)});
+try{await call('cfg_simpan',{cfg:nc})}catch(e){console.warn('cfg_simpan',e)}
+const d=await call('publik');S.pkt=d.paket;S.cfg=d.cfg||S.cfg;const x=S.pkt.find(p=>p.id==id),a=acakOf(x);
+if(a.s!==as||a.o!==ao)toast('Peringatan: pengaturan acak TIDAK tersimpan di server. Kirim bagian SQL paket_set/publik ke pengembang.',1,9000);else toast('Paket disimpan');aPaket()})}
 function rilis(id,v){if(!confirm(v?'Rilis paket ini? Murid dapat langsung mengerjakannya.':'Tutup paket ini? Murid tidak dapat memulai tes baru.'))return;T(async()=>{await call('paket_set',{id,rilis:v});toast(v?'Paket dirilis':'Paket ditutup');aPaket()})}
 function resetP(id){if(confirm('Hapus SEMUA nilai peserta pada paket ini? Tindakan ini tidak dapat dibatalkan.'))T(async()=>{await call('hasil_reset',{paket_id:id});toast('Nilai paket direset')})}
 function kelola(id){AS.pid=id;vAdmin('soal')}
