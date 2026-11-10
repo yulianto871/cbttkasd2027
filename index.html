@@ -156,10 +156,18 @@ ${mx>0?`<li>Tes berjalan dalam layar penuh. Tetap di halaman tes ya! Berpindah t
 function goFs(){const el=document.documentElement;if(TS&&TS.on&&MX()>0&&el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().catch(()=>{})}
 function mulai(id){const el=document.documentElement;if(MX()>0&&el.requestFullscreen)el.requestFullscreen().catch(()=>{});
 T(async()=>{let d;try{d=await call('ambil_tes',{paket_id:id,peserta_id:S.peserta.id})}catch(e){if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});throw e}
-const pk=d.paket;let soal=d.soal.map(q=>Object.assign(q,{perm:q.opsi.map((_,i)=>i)}));
-if(pk.acakOpsi)soal.forEach(q=>q.perm=shuf(q.perm));if(pk.acakSoal)soal=shuf(soal);
-TS={pk,soal,i:0,A:{},end:Date.now()+d.sisa*1000,viol:0,log:[],t0:Date.now(),on:true,fs:!!document.fullscreenElement,last:0};
-document.body.classList.add('testmode');nav();tick();TM=setInterval(tick,1000);rT();
+const tf=v=>v===true||v===1||v==='t'||v==='true'||v==='1',base=S.pkt.find(p=>p.id==id)||{},dp=d.paket||{},pk=Object.assign({},base,dp);
+const aSoal=tf(dp.acakSoal)||tf(dp.acak_soal)||tf(base.acakSoal),aOpsi=tf(dp.acakOpsi)||tf(dp.acak_opsi)||tf(base.acakOpsi);
+let soal=d.soal.map(q=>Object.assign(q,{perm:q.opsi.map((_,i)=>i)}));
+const ok='ord_'+id+'_'+S.peserta.id;let sv=null;try{sv=JSON.parse(sessionStorage.getItem(ok))}catch(e){}
+if(sv&&Array.isArray(sv.s)&&sv.s.length==soal.length){const m={};soal.forEach(q=>m[String(q.id)]=q);const ord=sv.s.map(x=>m[String(x)]);
+if(ord.every(Boolean)){soal=ord;soal.forEach(q=>{const p=(sv.o||{})[String(q.id)];if(Array.isArray(p)&&p.length==q.opsi.length&&p.every(x=>x>=0&&x<q.opsi.length))q.perm=p})}else sv=null}else sv=null;
+if(!sv){if(aOpsi)soal.forEach(q=>q.perm=shuf(q.perm));if(aSoal)soal=shuf(soal);
+try{const o={};soal.forEach(q=>o[String(q.id)]=q.perm);sessionStorage.setItem(ok,JSON.stringify({s:soal.map(q=>q.id),o}))}catch(e){}}
+const full=(+pk.durasi||60)*60,raw=[d.sisa,d.sisa_detik,d.remaining,dp.sisa].find(v=>v!=null&&v!==''&&isFinite(+v));
+let sisa=raw==null?full:+raw;if(sisa>full*2)sisa=sisa/1000;if(sisa<=0&&!(d.reload>0))sisa=full;sisa=Math.min(sisa,full);
+TS={pk,soal,i:0,A:{},end:Date.now()+sisa*1000,viol:0,log:[],t0:Date.now(),on:true,fs:!!document.fullscreenElement,last:0,ok};
+document.body.classList.add('testmode');nav();rT();clearInterval(TM);TM=setInterval(tick,500);
 if(d.reload>0)toast('Tes dimuat ulang: waktu tetap berjalan dan dicatat ('+d.reload+'x).',1)})}
 function tick(){const s=Math.max(0,Math.round((TS.end-Date.now())/1000)),e=$('#tm');if(e)e.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');if(s<=0&&TS&&TS.on&&!TS.sending){clearInterval(TM);selesai(true)}}
 function rT(){const q=TS.soal[TS.i],n=TS.soal.length,mx=MX(),ans=TS.soal.filter(isAns).length;
@@ -175,7 +183,7 @@ function setC(id,i,v){const q=TS.soal.find(x=>x.id==id),a=TS.A[id]||q.opsi.map((
 function selesai(auto){if(!TS||!TS.on||TS.sending)return;const kosong=TS.soal.filter(q=>!isAns(q)).length;if(!auto&&!confirm(kosong?`Masih ada ${kosong} soal belum dijawab. Kirim sekarang?`:'Kirim jawaban sekarang?'))return;
 closeM();TS.sending=true;clearInterval(TM);
 T(async()=>{try{const r=await call('kirim',{paket_id:TS.pk.id,peserta_id:S.peserta.id,jawaban:TS.A,pelanggaran:TS.viol,log:TS.log.slice(0,50)});
-TS.on=false;document.body.classList.remove('testmode');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});nav();const h=await call('hasil',{id:r.id});
+TS.on=false;try{sessionStorage.removeItem(TS.ok)}catch(e){}document.body.classList.remove('testmode');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});nav();const h=await call('hasil',{id:r.id});
 window._R=h;showResult(h)}
 catch(e){TS.sending=false;$('#app').innerHTML=`<div class="card" style="max-width:520px;margin:auto"><h3>Gagal mengirim jawaban</h3><p>${esc(e.message)}</p><div class="row"><button class="btn" onclick="selesai(true)">Kirim ulang</button><button class="b2" onclick="TS.on=false;document.body.classList.remove('testmode');nav();vDaftar()">Keluar</button></div></div>`}})}
 
