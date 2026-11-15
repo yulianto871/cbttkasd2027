@@ -140,38 +140,26 @@ if(!p){$('#app').innerHTML=`<div class="card form"><div class="mascot">🦉</div
 <label class="f">🎒 Kelas</label><input id="d_c" placeholder="contoh: 6A">
 <p style="text-align:center"><button class="btn lg" onclick="daftar()">Daftar & Lanjut 🚀</button></p></div>`;return}
 $('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 Halo, ${esc(p.nama)}!</h2><span class="hint">${esc(p.sekolah)} · Kelas ${esc(p.kelas)} · Kec. ${esc(p.kecamatan)}</span></div><button class="b2 sm" onclick="S.peserta=null;vDaftar()">Ganti peserta</button></div><p class="hint" style="font-size:16px">Pilih paket soal yang sudah terbuka, lalu kerjakan dengan teliti ya! 💪</p><div id="pk">Memuat paket…</div>`;
-T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;if(d.cfg)S.cfg=d.cfg;
+T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;
 $('#pk').innerHTML=MAPEL.map((m,mi)=>`<div class="mp m${mi+1}"><div class="mh"><span class="ic">${mi?'📚':'📐'}</span><h3>${m}</h3></div><div class="pgd">${d.paket.filter(x=>x.mapel==m).map(x=>{const done=d.selesai.includes(x.id),ok=x.rilis&&x.jml>0;
 return `<div class="pc ${done?'done':ok?'':'off'}"><div class="no">${ok||done?x.nomor:'🔒'}</div><b>${esc(x.judul)}</b><small>${x.jml} soal · ${x.durasi} menit</small>${done?'<em>✅ Sudah selesai</em>':ok?`<button class="btn sm" onclick="intro(${x.id})">Kerjakan 🚀</button>`:'<em>Belum dibuka</em>'}</div>`}).join('')}</div></div>`).join('')})}
 function daftar(){T(async()=>{S.peserta=await call('daftar',{nama:$('#d_n').value,kecamatan:$('#d_k').value,sekolah:$('#d_s').value,kelas:$('#d_c').value});toast('Pendaftaran berhasil');vDaftar()})}
-const TF=v=>v===true||v===1||v==='t'||v==='true'||v==='1';
-function acakMap(){try{const m=JSON.parse(S.cfg.acak_paket||'{}');return m&&typeof m=='object'?m:{}}catch(e){return{}}}
-function acakOf(x,extra){let s=false,o=false;[x,extra].forEach(r=>Object.keys(r||{}).forEach(k=>{const n=k.replace(/[_\s]/g,'');if(/^acak(nomor)?soal$/i.test(n)&&TF(r[k]))s=true;if(/^acak(opsi|pilihan|jawaban)$/i.test(n)&&TF(r[k]))o=true}));
-const m=acakMap()[x&&x.id];if(m){if(m.s)s=true;if(m.o)o=true}return{s,o}}
 const MX=()=>{const v=parseInt(S.cfg.maxPelanggaran);return isNaN(v)?3:v};
 function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(crypto.getRandomValues(new Uint32Array(1))[0]/4294967296*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function intro(id){const x=S.pkt.find(p=>p.id==id),mx=MX();
 $('#app').innerHTML=`<div class="card intro" style="max-width:640px;margin:auto"><div class="mascot">🦉</div><h2 style="text-align:center">Siap mengerjakan?</h2><p class="sub" style="text-align:center;color:var(--r)">${esc(x.mapel)} – ${esc(x.judul)}</p>
 <p style="text-align:center"><span class="pill pub">📝 ${x.jml} soal</span> <span class="pill pub">⏰ ${x.durasi} menit</span> <span class="pill pub">1️⃣ hanya satu kali</span></p><ul style="line-height:1.8">
 <li>Waktu berjalan sejak tombol Mulai ditekan dan tetap berjalan walau halaman dimuat ulang.</li>
-${(()=>{const a=acakOf(x);return a.s||a.o})()?'<li>Urutan soal dan/atau pilihan jawaban diacak, jadi tiap teman mendapat urutan yang berbeda.</li>':''}
+${x.acakSoal||x.acakOpsi?'<li>Urutan soal dan/atau pilihan jawaban diacak, jadi tiap teman mendapat urutan yang berbeda.</li>':''}
 ${mx>0?`<li>Tes berjalan dalam layar penuh. Tetap di halaman tes ya! Berpindah tab/jendela, keluar layar penuh, atau menyalin/menempel akan <b>dicatat sebagai pelanggaran</b>.</li><li>Pada pelanggaran ke-${mx}, jawabanmu otomatis dikirim.</li>`:''}<li>Kerjakan dengan jujur dan teliti. Kamu pasti bisa! 💪</li></ul>
 <div class="row"><button class="b2" onclick="vDaftar()">⬅ Kembali</button><button class="btn lg" onclick="mulai(${id})">Mulai Sekarang 🚀</button></div></div>`}
 function goFs(){const el=document.documentElement;if(TS&&TS.on&&MX()>0&&el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().catch(()=>{})}
 function mulai(id){const el=document.documentElement;if(MX()>0&&el.requestFullscreen)el.requestFullscreen().catch(()=>{});
 T(async()=>{let d;try{d=await call('ambil_tes',{paket_id:id,peserta_id:S.peserta.id})}catch(e){if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});throw e}
-const tf=v=>v===true||v===1||v==='t'||v==='true'||v==='1',base=S.pkt.find(p=>p.id==id)||{},dp=d.paket||{},pk=Object.assign({},base,dp);
-const ak=acakOf(Object.assign({},base,dp,{id}),d),aSoal=ak.s,aOpsi=ak.o;console.log('acak',aSoal,aOpsi,Object.keys(dp));
-let soal=d.soal.map(q=>Object.assign(q,{perm:q.opsi.map((_,i)=>i)}));
-const ok='ord_'+id+'_'+S.peserta.id;let sv=null;try{sv=JSON.parse(sessionStorage.getItem(ok))}catch(e){}
-if(sv&&Array.isArray(sv.s)&&sv.s.length==soal.length){const m={};soal.forEach(q=>m[String(q.id)]=q);const ord=sv.s.map(x=>m[String(x)]);
-if(ord.every(Boolean)){soal=ord;soal.forEach(q=>{const p=(sv.o||{})[String(q.id)];if(Array.isArray(p)&&p.length==q.opsi.length&&p.every(x=>x>=0&&x<q.opsi.length))q.perm=p})}else sv=null}else sv=null;
-if(!sv){if(aOpsi)soal.forEach(q=>q.perm=shuf(q.perm));if(aSoal)soal=shuf(soal);
-try{const o={};soal.forEach(q=>o[String(q.id)]=q.perm);sessionStorage.setItem(ok,JSON.stringify({s:soal.map(q=>q.id),o}))}catch(e){}}
-const full=(+pk.durasi||60)*60,raw=[d.sisa,d.sisa_detik,d.remaining,dp.sisa].find(v=>v!=null&&v!==''&&isFinite(+v));
-let sisa=raw==null?full:+raw;if(sisa>full*2)sisa=sisa/1000;if(sisa<=0&&!(d.reload>0))sisa=full;sisa=Math.min(sisa,full);
-TS={pk,soal,i:0,A:{},end:Date.now()+sisa*1000,viol:0,log:[],t0:Date.now(),on:true,fs:!!document.fullscreenElement,last:0,ok};
-document.body.classList.add('testmode');nav();rT();clearInterval(TM);TM=setInterval(tick,500);
+const pk=d.paket;let soal=d.soal.map(q=>Object.assign(q,{perm:q.opsi.map((_,i)=>i)}));
+if(pk.acakOpsi)soal.forEach(q=>q.perm=shuf(q.perm));if(pk.acakSoal)soal=shuf(soal);
+TS={pk,soal,i:0,A:{},end:Date.now()+d.sisa*1000,viol:0,log:[],t0:Date.now(),on:true,fs:!!document.fullscreenElement,last:0};
+document.body.classList.add('testmode');nav();tick();TM=setInterval(tick,1000);rT();
 if(d.reload>0)toast('Tes dimuat ulang: waktu tetap berjalan dan dicatat ('+d.reload+'x).',1)})}
 function tick(){const s=Math.max(0,Math.round((TS.end-Date.now())/1000)),e=$('#tm');if(e)e.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');if(s<=0&&TS&&TS.on&&!TS.sending){clearInterval(TM);selesai(true)}}
 function rT(){const q=TS.soal[TS.i],n=TS.soal.length,mx=MX(),ans=TS.soal.filter(isAns).length;
@@ -187,7 +175,7 @@ function setC(id,i,v){const q=TS.soal.find(x=>x.id==id),a=TS.A[id]||q.opsi.map((
 function selesai(auto){if(!TS||!TS.on||TS.sending)return;const kosong=TS.soal.filter(q=>!isAns(q)).length;if(!auto&&!confirm(kosong?`Masih ada ${kosong} soal belum dijawab. Kirim sekarang?`:'Kirim jawaban sekarang?'))return;
 closeM();TS.sending=true;clearInterval(TM);
 T(async()=>{try{const r=await call('kirim',{paket_id:TS.pk.id,peserta_id:S.peserta.id,jawaban:TS.A,pelanggaran:TS.viol,log:TS.log.slice(0,50)});
-TS.on=false;try{sessionStorage.removeItem(TS.ok)}catch(e){}document.body.classList.remove('testmode');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});nav();const h=await call('hasil',{id:r.id});
+TS.on=false;document.body.classList.remove('testmode');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});nav();const h=await call('hasil',{id:r.id});
 window._R=h;showResult(h)}
 catch(e){TS.sending=false;$('#app').innerHTML=`<div class="card" style="max-width:520px;margin:auto"><h3>Gagal mengirim jawaban</h3><p>${esc(e.message)}</p><div class="row"><button class="btn" onclick="selesai(true)">Kirim ulang</button><button class="b2" onclick="TS.on=false;document.body.classList.remove('testmode');nav();vDaftar()">Keluar</button></div></div>`}})}
 
@@ -222,7 +210,7 @@ function oH(o){const p=pO(o);return p.img?`<span><img class="opimg" src="${url(p
 function qHTML(q,n,A,mode,p){const a=A[q.id],dis=mode=='key'?'disabled':'',ky=mode=='key'?q.kunci||[]:null,nm=p+q.id,P=q.perm||q.opsi.map((_,i)=>i);let h=sHTML(q.sTipe,q.stimulus)+`<p class="qt"><span class="qn">${n}</span>${mt(q.pertanyaan,true)}</p>`;
 if(q.tipe=='pg'){h+='<p class="hint">Pilih satu jawaban yang benar.</p>'+P.map((i,k)=>`<label class="opt ${ky&&ky[0]==i?'ok':''}"><input type="radio" name="${nm}" ${a===i?'checked':''} ${dis} onchange="setA('${q.id}',${i})"><b>${LET[k]}.</b>${oH(q.opsi[i])}</label>`).join('')}
 else if(q.tipe=='mcma'){h+=`<p class="hint">Pilih ${q.jml||(q.kunci||[]).length||2} jawaban yang benar (centang).</p>`+P.map(i=>`<label class="opt ${ky&&ky.includes(i)?'ok':''}"><input type="checkbox" ${(a||[]).includes(i)?'checked':''} ${dis} onchange="togM('${q.id}',${i})">${oH(q.opsi[i])}</label>`).join('')}
-else{const L=(q.kategori||'Benar|Salah').split('|');h+=`<p class="hint">Tentukan setiap pernyataan: ${L.join(' atau ')}.</p><div class="tw"><table><tr><th>Pernyataan</th>${L.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>`+P.map(i=>`<tr><td>${oH(q.opsi[i])}</td>${L.map((x,j)=>`<td><input type="radio" name="${nm}_${i}" ${(mode=='key'?ky[i]===j:a&&a[i]===j)?'checked':''} ${dis} onchange="setC('${q.id}',${i},${j})"></td>`).join('')}</tr>`).join('')+'</table></div>'}
+else{const L=(q.kategori||'Benar|Salah').split('|');h+=`<p class="hint">Tentukan setiap pernyataan: ${L.join(' atau ')}.</p><div class="tw"><table><tr><th>Pernyataan</th>${L.map(x=>`<th>${esc(x)||'—'}</th>`).join('')}</tr>`+P.map(i=>`<tr><td>${oH(q.opsi[i])}</td>${L.map((x,j)=>`<td><input type="radio" name="${nm}_${i}" ${(mode=='key'?ky[i]===j:a&&a[i]===j)?'checked':''} ${dis} onchange="setC('${q.id}',${i},${j})"></td>`).join('')}</tr>`).join('')+'</table></div>'}
 return h}
 
 /* ===== Leaderboard ===== */
@@ -257,15 +245,10 @@ $('#app').innerHTML=`<div class="row"><h2>Panel Admin <span class="pill">${esc(S
 T(async()=>{await({paket:aPaket,soal:aSoal,cfg:aCfg,hasil:aHasil,agt:aAgt})[t]()})}
 
 /* -- Paket & rilis -- */
-async function aPaket(){const d=await call('publik');S.pkt=d.paket;S.cfg=d.cfg||S.cfg;
-$('#ap').innerHTML=`<p class="hint">Murid hanya dapat mengerjakan paket yang berstatus <b>Dirilis</b>. Paket harus memiliki soal sebelum dirilis.</p>`+MAPEL.map(m=>`<div class="card tw"><h3>${m}</h3><table><tr><th>Paket</th><th>Judul</th><th>Durasi (mnt)</th><th>Soal</th><th>Acak soal</th><th>Acak opsi</th><th>Status</th><th>Aksi</th></tr>${d.paket.filter(x=>x.mapel==m).map(x=>`<tr><td>${x.nomor}</td><td><input id="pj${x.id}" value="${esc(x.judul)}"></td><td><input id="pd${x.id}" type="number" min="1" value="${x.durasi}" style="width:80px"></td><td>${x.jml}</td><td><input type="checkbox" id="as${x.id}" ${acakOf(x).s?'checked':''}></td><td><input type="checkbox" id="ao${x.id}" ${acakOf(x).o?'checked':''}></td><td><span class="pill ${x.rilis?'pub':''}">${x.rilis?'Dirilis':'Belum dirilis'}</span></td>
+async function aPaket(){const d=await call('publik');S.pkt=d.paket;
+$('#ap').innerHTML=`<p class="hint">Murid hanya dapat mengerjakan paket yang berstatus <b>Dirilis</b>. Paket harus memiliki soal sebelum dirilis.</p>`+MAPEL.map(m=>`<div class="card tw"><h3>${m}</h3><table><tr><th>Paket</th><th>Judul</th><th>Durasi (mnt)</th><th>Soal</th><th>Acak soal</th><th>Acak opsi</th><th>Status</th><th>Aksi</th></tr>${d.paket.filter(x=>x.mapel==m).map(x=>`<tr><td>${x.nomor}</td><td><input id="pj${x.id}" value="${esc(x.judul)}"></td><td><input id="pd${x.id}" type="number" min="1" value="${x.durasi}" style="width:80px"></td><td>${x.jml}</td><td><input type="checkbox" id="as${x.id}" ${x.acakSoal?'checked':''}></td><td><input type="checkbox" id="ao${x.id}" ${x.acakOpsi?'checked':''}></td><td><span class="pill ${x.rilis?'pub':''}">${x.rilis?'Dirilis':'Belum dirilis'}</span></td>
 <td><button class="${x.rilis?'b2':'btn'} sm" onclick="rilis(${x.id},${!x.rilis})">${x.rilis?'Tutup Tes':'Rilis Tes'}</button> <button class="b2 sm" onclick="svP(${x.id})">Simpan</button> <button class="b2 sm" onclick="kelola(${x.id})">Kelola Soal</button> <button class="b2 sm" onclick="resetP(${x.id})">Reset Nilai</button></td></tr>`).join('')}</table></div>`).join('')}
-function svP(id){T(async()=>{const as=$('#as'+id).checked,ao=$('#ao'+id).checked;
-await call('paket_set',{id,judul:$('#pj'+id).value,durasi:+$('#pd'+id).value,acakSoal:as,acakOpsi:ao,acak_soal:as,acak_opsi:ao,acaksoal:as,acakopsi:ao});
-const m=acakMap();m[id]={s:as,o:ao};const nc=Object.assign({},S.cfg,{acak_paket:JSON.stringify(m)});
-try{await call('cfg_simpan',{cfg:nc})}catch(e){console.warn('cfg_simpan',e)}
-const d=await call('publik');S.pkt=d.paket;S.cfg=d.cfg||S.cfg;const x=S.pkt.find(p=>p.id==id),a=acakOf(x);
-if(a.s!==as||a.o!==ao)toast('Peringatan: pengaturan acak TIDAK tersimpan di server. Kirim bagian SQL paket_set/publik ke pengembang.',1,9000);else toast('Paket disimpan');aPaket()})}
+function svP(id){T(async()=>{await call('paket_set',{id,judul:$('#pj'+id).value,durasi:+$('#pd'+id).value,acakSoal:$('#as'+id).checked,acakOpsi:$('#ao'+id).checked});toast('Paket disimpan');aPaket()})}
 function rilis(id,v){if(!confirm(v?'Rilis paket ini? Murid dapat langsung mengerjakannya.':'Tutup paket ini? Murid tidak dapat memulai tes baru.'))return;T(async()=>{await call('paket_set',{id,rilis:v});toast(v?'Paket dirilis':'Paket ditutup');aPaket()})}
 function resetP(id){if(confirm('Hapus SEMUA nilai peserta pada paket ini? Tindakan ini tidak dapat dibatalkan.'))T(async()=>{await call('hasil_reset',{paket_id:id});toast('Nilai paket direset')})}
 function kelola(id){AS.pid=id;vAdmin('soal')}
@@ -311,7 +294,7 @@ let sTipe=['teks','grafik','gambar'].includes(a.stimulus_tipe)?a.stimulus_tipe:'
 if(sTipe=='gambar'){const m=mk(st);if(m)st=m.u;else{sTipe='none';st=''}}if(sTipe!='none'&&!st.trim()){sTipe='none';st=''}
 const opsi=(a.opsi||[]).map(o=>{const m=mk(o);return m?mO(m.u,m.c):String(o).trim()});
 const tipe=['pg','mcma','kategori'].includes(a.tipe)?a.tipe:'pg',kunci=Array.isArray(a.kunci)?a.kunci.map(Number).filter(Number.isInteger):[];
-return{id:'',paket_id:AS.pid,tipe,sTipe,stimulus:st,pertanyaan:String(a.pertanyaan||'').trim(),opsi,kunci,kategori:['Benar|Salah','Tepat|Kurang Tepat','Sesuai|Tidak Sesuai'].includes(a.kategori)?a.kategori:'Benar|Salah',no:a.nomor||0,sel:true,aiKey:!!a.kunci_dari_ai&&kunci.length>0,needImg:!!a.butuh_gambar,note:String(a.catatan||'')}}
+return{id:'',paket_id:AS.pid,tipe,sTipe,stimulus:st,pertanyaan:String(a.pertanyaan||'').trim(),opsi,kunci,kategori:/\|/.test(a.kategori||'')?String(a.kategori):'Benar|Salah',no:a.nomor||0,sel:true,aiKey:!!a.kunci_dari_ai&&kunci.length>0,needImg:!!a.butuh_gambar,note:String(a.catatan||'')}}
 async function impAI(f,t,solve){const opt={mapel:pk().mapel,tentukan_kunci:solve},jobs=[];let imgs=[];toast('Menyiapkan dokumen…',0,120000);
 if(f&&/\.pdf$/i.test(f.name)){if(f.size>8e6)throw new Error('PDF maksimal 8 MB untuk metode AI. Pecah dokumen menjadi beberapa bagian.');await loadJs(LIB.pdf);pdfjsLib.GlobalWorkerOptions.workerSrc=await pdfWorker();
 const n=(await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise).numPages,data=await b64(f);for(let a=1;a<=n;a+=4)jobs.push({pdf:data,range:[a,Math.min(n,a+3)]})}
@@ -384,7 +367,7 @@ if(L){kunci=[...new Set(L.map(x=>x.charCodeAt(0)-65))];if(kunci.length>=2)tipe='
 let sTipe='none',stimulus='';if(q.imgs.length){sTipe='gambar';stimulus=q.imgs[0];qL=[...sL,...qL];sL=[]}else if(sL.length){sTipe='teks';stimulus=sL.join('\n')}
 return{id:'',paket_id:AS.pid,tipe,sTipe,stimulus,pertanyaan:qL.join(' ').trim(),opsi:q.opsi.map(o=>o.img?mO(o.img,o.t):o.t),kunci,kategori:kat,no:q.no,sel:true}})}
 function vP(q){const p=[],k=q.kunci||[];if(!String(q.pertanyaan).trim())p.push('pertanyaan kosong');if(q.opsi.length<2||q.opsi.some(o=>!String(o).trim()))p.push('opsi tidak lengkap');
-if((q.tipe=='pg'||q.tipe=='mcma')&&k.some(x=>x<0||x>=q.opsi.length))p.push('kunci di luar opsi');if(q.tipe=='pg'&&k.length!=1)p.push('kunci belum ada');if(q.tipe=='mcma'&&k.length!=2)p.push('kunci harus 2');if(q.tipe=='kategori'&&(k.length!=q.opsi.length||k.some(x=>x!==0&&x!==1)))p.push('kunci belum lengkap');return p}
+if((q.tipe=='pg'||q.tipe=='mcma')&&k.some(x=>x<0||x>=q.opsi.length))p.push('kunci di luar opsi');if(q.tipe=='pg'&&k.length!=1)p.push('kunci belum ada');if(q.tipe=='mcma'&&k.length!=2)p.push('kunci harus 2');if(q.tipe=='kategori'&&(k.length!=q.opsi.length||k.some(x=>!Number.isInteger(x)||x<0||x>=String(q.kategori||'').split('|').length)))p.push('kunci belum lengkap');return p}
 function impReview(){const it=IM.items;
 $('#ap').innerHTML=`<div class="row"><h2 style="margin:0">Hasil Ekstraksi</h2><span class="pill pub">${it.length} soal dari ${esc(IM.src)}</span></div>
 <p class="hint">Periksa tiap soal. Tanda ⚠ berarti ada data yang belum lengkap (mis. kunci belum terbaca); klik Edit untuk melengkapi. Rumus perlu ditulis ulang dengan Penulis Rumus bila belum benar.</p>
@@ -422,7 +405,7 @@ function pO(o){o=String(o==null?'':o);if(o.indexOf('@img:')!=0)return{img:'',cap
 const mO=(u,c)=>u?'@img:'+u+(c?'|'+c:''):c;
 function setCap(i,v){E.opsi[i]=mO(pO(E.opsi[i]).img,v);lp()}
 function delImg(i){E.opsi[i]=pO(E.opsi[i]).cap;eForm()}
-function kc(i,L){const e=E;return e.tipe=='pg'?`<input type="radio" name="kk" ${e.kunci[0]==i?'checked':''} onchange="eKey(${i})">`:e.tipe=='mcma'?`<input type="checkbox" ${e.kunci.includes(i)?'checked':''} onchange="eKey(${i},this.checked)">`:`<select onchange="E.kunci[${i}]=+this.value;lp()">${L.map((x,j)=>`<option value="${j}" ${e.kunci[i]===j?'selected':''}>${x}</option>`).join('')}</select>`}
+function kc(i,L){const e=E;return e.tipe=='pg'?`<input type="radio" name="kk" ${e.kunci[0]==i?'checked':''} onchange="eKey(${i})">`:e.tipe=='mcma'?`<input type="checkbox" ${e.kunci.includes(i)?'checked':''} onchange="eKey(${i},this.checked)">`:`<select onchange="E.kunci[${i}]=+this.value;lp()">${L.map((x,j)=>`<option value="${j}" ${e.kunci[i]===j?'selected':''}>${esc(x)||'Kategori '+(j+1)}</option>`).join('')}</select>`}
 /* Tempel (Ctrl+V) gambar dari clipboard ke stimulus / opsi */
 document.addEventListener('paste',async ev=>{if(!E||!$('#lp')||(TS&&TS.on))return;const it=[...(ev.clipboardData&&ev.clipboardData.items||[])].find(x=>x.type.indexOf('image/')==0);if(!it)return;ev.preventDefault();
 const f=it.getAsFile();if(!f)return;const t=PT||'s';
@@ -444,6 +427,13 @@ function prevPaket(){modal(`<h3>Pratinjau ${esc(pk().mapel)} – ${esc(pk().judu
 function geser(id,d){T(async()=>{await call('soal_geser',{id,dir:d});aSoal()})}
 function hapusQ(id){if(confirm('Hapus soal ini?'))T(async()=>{await call('soal_hapus',{id});aSoal()})}
 function edit(id){E=id?JSON.parse(JSON.stringify(AS.soal.find(x=>x.id==id))):{id:'',paket_id:AS.pid,tipe:'pg',sTipe:'none',stimulus:'',pertanyaan:'',opsi:['','','',''],kunci:[],kategori:'Benar|Salah'};eForm()}
+function katEd(){const e=E,cust=e._kc||!KAT.includes(e.kategori),L=String(e.kategori||'').split('|');
+return `<label class="f">Kategori jawaban</label><select onchange="katSel(this.value)">${KAT.map(k=>`<option value="${k}" ${!cust&&k==e.kategori?'selected':''}>${k.replace('|',' / ')}</option>`).join('')}<option value="__c" ${cust?'selected':''}>✏️ Tulis sendiri…</option></select>
+${cust?`<div class="eqb">${L.map((x,i)=>`<div class="row" style="flex-wrap:nowrap;margin-bottom:6px"><input value="${esc(x)}" placeholder="Nama kategori ${i+1}" oninput="setKL(${i},this.value)" onchange="eForm()">${L.length>2?`<button class="b2 sm" onclick="delKL(${i})">×</button>`:''}</div>`).join('')}${L.length<4?`<button class="b2 sm" onclick="addKL()">+ Tambah kategori</button>`:''}<p class="hint">Contoh: Fakta / Opini, Setuju / Tidak Setuju, Persegi / Persegi Panjang / Segitiga. Isi 2–4 nama yang berbeda; tanda | tidak boleh dipakai.</p></div>`:''}`}
+function katSel(v){if(v=='__c'){E._kc=true;if(String(E.kategori||'').split('|').length<2)E.kategori='|'}else{E._kc=false;E.kategori=v;E.kunci=E.kunci.map(k=>k>1?0:k)}eForm()}
+function setKL(i,v){const L=String(E.kategori||'').split('|');L[i]=v.replace(/\|/g,'');E.kategori=L.join('|');lp()}
+function addKL(){E.kategori=String(E.kategori||'')+'|';eForm()}
+function delKL(i){const L=String(E.kategori||'').split('|');L.splice(i,1);E.kategori=L.join('|');E.kunci=E.kunci.map(k=>k==i?0:k>i?k-1:k);eForm()}
 function eTipe(t){E.tipe=t;E.opsi=Array(t=='pg'?4:3).fill('');E.kunci=t=='kategori'?[0,0,0]:[];eForm()}
 function eRem(i){E.opsi.splice(i,1);if(E.tipe=='kategori')E.kunci.splice(i,1);else if(E.tipe=='pg')E.kunci=E.kunci[0]==i?[]:E.kunci[0]>i?[E.kunci[0]-1]:E.kunci;else E.kunci=E.kunci.filter(k=>k!=i).map(k=>k>i?k-1:k);eForm()}
 function eAdd(){E.opsi.push('');if(E.tipe=='kategori')E.kunci.push(0);eForm()}
@@ -458,7 +448,7 @@ ${inp?`<input id="e_s" onfocus="PT='s'" value="${esc(e.stimulus)}" placeholder="
 <div class="pz" tabindex="0" onfocus="PT='s'">📋 Klik di sini lalu tekan Ctrl+V untuk menempel gambar sebagai stimulus</div>
 ${st!='none'?`<p><button class="b2 sm" onclick="E.sTipe='none';E.stimulus='';eForm()">Hapus stimulus</button></p>`:''}
 <label class="f">Pertanyaan</label><textarea onfocus="PT=null" oninput="E.pertanyaan=this.value;lp()">${esc(e.pertanyaan)}</textarea>
-${e.tipe=='kategori'?`<label class="f">Pasangan kategori</label><select onchange="E.kategori=this.value;eForm()">${KAT.map(k=>`<option ${k==e.kategori?'selected':''}>${k}</option>`).join('')}</select>`:''}
+${e.tipe=='kategori'?katEd():''}
 <label class="f">${e.tipe=='kategori'?'Pernyataan & kunci':'Opsi jawaban (tandai kunci)'}</label>
 ${e.opsi.map((o,i)=>{const po=pO(o);return `<div class="row" style="margin-bottom:6px;flex-wrap:nowrap"><span style="min-width:${e.tipe=='kategori'?150:30}px;display:flex;align-items:center">${kc(i,L)}</span>${po.img?`<img class="opimg" src="${url(po.img)}" style="max-height:60px;max-width:90px"><input value="${esc(po.cap)}" onfocus="PT='o${i}'" oninput="setCap(${i},this.value)" placeholder="Keterangan gambar (opsional)"><button class="b2 sm" onclick="delImg(${i})">Hapus gambar</button>`:`<input value="${esc(po.cap)}" onfocus="PT='o${i}'" oninput="E.opsi[${i}]=this.value;lp()" placeholder="${e.tipe=='kategori'?'Pernyataan':'Opsi'} ${i+1}"><label class="b2 sm" style="cursor:pointer;white-space:nowrap">🖼 Gambar<input type="file" accept="image/*" style="display:none" onchange="upOpt(this,${i})"></label>`}<button class="b2 sm" onclick="eRem(${i})">×</button></div>`}).join('')}
 <p class="hint">Tips: klik kolom opsi, lalu tekan Ctrl+V untuk menempel gambar dari clipboard.</p>
@@ -467,7 +457,7 @@ ${e.opsi.map((o,i)=>{const po=pO(o);return `<div class="row" style="margin-botto
 <div class="card pv"><h3>Pratinjau langsung</h3><div id="lp"></div></div></div>`;lp()}
 function lp(){const e=$('#lp');if(e){const q=Object.assign({},E,{id:E.id||'x'});e.innerHTML=qHTML(q,1,kA(q),'key','lv')}}
 function prevQ2(){const q=Object.assign({},E,{id:E.id||'x'});modal('<h3>Pratinjau Soal</h3>'+qHTML(q,1,kA(q),'key','pv'))}
-function saveQ(){if(E.opsi.some(o=>!String(o).trim()))return toast('Semua opsi/pernyataan wajib diisi (teks atau gambar).',1);if(E.tipe=='pg'&&E.kunci.length!=1)return toast('Tandai satu kunci jawaban.',1);if(E.tipe=='mcma'&&E.kunci.length!=2)return toast('MCMA: tandai tepat 2 kunci jawaban.',1);if(E.tipe=='kategori'&&E.kunci.some(k=>k!==0&&k!==1))return toast('Pilih kunci tiap pernyataan.',1);
+function saveQ(){if(E.opsi.some(o=>!String(o).trim()))return toast('Semua opsi/pernyataan wajib diisi (teks atau gambar).',1);if(E.tipe=='pg'&&E.kunci.length!=1)return toast('Tandai satu kunci jawaban.',1);if(E.tipe=='mcma'&&E.kunci.length!=2)return toast('MCMA: tandai tepat 2 kunci jawaban.',1);if(E.tipe=='kategori'){const L=String(E.kategori||'').split('|').map(x=>x.trim());if(L.length<2||L.length>4||L.some(x=>!x)||new Set(L.map(x=>x.toLowerCase())).size!=L.length)return toast('Kategori harus 2–4 nama yang terisi dan berbeda.',1);if(E.kunci.length!=E.opsi.length||E.kunci.some(k=>!Number.isInteger(k)||k<0||k>=L.length))return toast('Pilih kunci tiap pernyataan.',1);E.kategori=L.join('|')}
 if(E._imp!=null){const i=E._imp;delete E._imp;IM.items[i]=E;impReview();return}
 T(async()=>{await call('soal_simpan',{soal:E});toast('Soal disimpan');await aSoal()})}
 
