@@ -92,6 +92,11 @@ td{padding:9px;border-bottom:2px solid var(--soft);vertical-align:top}
 .eqb{background:var(--soft);border:2.5px dashed var(--pink);border-radius:16px;padding:12px;margin-bottom:10px}
 .eqbtns{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.eqbtns button{border:2px solid var(--pink);background:#fff;border-radius:10px;padding:4px 9px;font:700 14px 'Nunito',sans-serif;cursor:pointer;min-width:34px;color:var(--t)}.eqbtns button:hover{background:var(--pink)}
 .eqpv{min-height:36px;padding:6px 2px;font-size:19px}.katex{font-size:1.1em}
+.stim .tbw{overflow-x:auto;margin:8px 0}
+.stim table.tb{width:auto;max-width:100%;border:2px solid var(--r);background:#fff;font-size:16px;white-space:normal}
+.stim table.tb th,.stim table.tb td{border:1.5px solid var(--r);padding:7px 12px;text-align:left;border-radius:0!important;vertical-align:middle}
+.stim table.tb th{background:var(--r);color:#fff}
+.tbg{width:auto}.tbg td{padding:3px;border:0}.tbg input{min-width:90px;padding:7px 9px}
 @media print{body.testmode{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:760px){.hero,.ed,.g2{grid-template-columns:1fr}.ed .pv{position:static}.hero{padding:22px}.pod{gap:6px}.opt{font-size:17px}}
@@ -204,7 +209,7 @@ const x=v.split('?')[0].toLowerCase();if(/\.pdf$/.test(x))return `<iframe src="$
 if(/\.(docx?|pptx?|xlsx?)$/.test(x))return `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(v)}"></iframe>`;
 if(/\.(png|jpe?g|gif|webp)$/.test(x))return `<img src="${url(v)}" alt="">`;return `<a href="${url(v)}" target="_blank" rel="noopener">Buka lampiran stimulus</a>`}
 function sHTML(t,v){if(!t||t=='none'||!v)return '';let b='';
-if(t=='teks')b=mt(v);else if(t=='gambar')b=url(v)?`<img src="${url(v)}" alt="Stimulus gambar">`:'';else if(t=='grafik')b=chart(v);else b=emb(v);
+if(t=='teks')b=mtT(v);else if(t=='gambar')b=url(v)?`<img src="${url(v)}" alt="Stimulus gambar">`:'';else if(t=='grafik')b=chart(v);else b=emb(v);
 return `<div class="stim">${b}</div>`}
 function oH(o){const p=pO(o);return p.img?`<span><img class="opimg" src="${url(p.img)}" alt="">${p.cap?'<br>'+mt(p.cap):''}</span>`:`<span>${mt(p.cap)}</span>`}
 function qHTML(q,n,A,mode,p){const a=A[q.id],dis=mode=='key'?'disabled':'',ky=mode=='key'?q.kunci||[]:null,nm=p+q.id,P=q.perm||q.opsi.map((_,i)=>i);let h=sHTML(q.sTipe,q.stimulus)+`<p class="qt"><span class="qn">${n}</span>${mt(q.pertanyaan,true)}</p>`;
@@ -389,6 +394,12 @@ toast(L.length+' soal berhasil diimpor ke paket');IM.items=[];await aSoal()})}
 /* ===== Rumus matematika (KaTeX) ===== */
 function kx(t,d){try{if(window.katex)return katex.renderToString(t,{throwOnError:false,displayMode:!!d,strict:'ignore'})}catch(e){}return esc((d?'$$':'$')+t+(d?'$$':'$'))}
 function mt(v,br){v=String(v==null?'':v).replace(/\\\$/g,'\u0001');return v.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g).map((p,i)=>{if(i%2){const dd=p.slice(0,2)=='$$',t=(dd?p.slice(2,-2):p.slice(1,-1)).replace(/\u0001/g,'\\$');return kx(t,dd)}const h=esc(p.replace(/\u0001/g,'$'));return br?h.replace(/\n/g,'<br>'):h}).join('')}
+function mtT(v){const L=String(v==null?'':v).split('\n'),out=[];let tx=[],tb=[];
+const isT=l=>/^\s*\|.*\|\s*$/.test(l),sep=l=>/^\s*\|(\s*:?-{2,}:?\s*\|)+\s*$/.test(l);
+const fl=()=>{if(tx.length){out.push(mt(tx.join('\n'),true));tx=[]}
+if(tb.length){const hd=tb.length>1&&sep(tb[1]),rows=tb.filter((l,i)=>!(hd&&i==1)).map(l=>l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim()));
+out.push('<div class="tbw"><table class="tb">'+rows.map((r,i)=>'<tr>'+r.map(c=>(hd&&i==0?'<th>':'<td>')+mt(c)+(hd&&i==0?'</th>':'</td>')).join('')+'</tr>').join('')+'</table></div>');tb=[]}};
+L.forEach(l=>{if(isT(l)){if(tx.length)fl();tb.push(l)}else{if(tb.length)fl();tx.push(l)}});fl();return out.join('')}
 const EQ=[['a⁄b','\\frac{\\square}{\\square}'],['campuran','\\square\\frac{\\square}{\\square}'],['√','\\sqrt{\\square}'],['³√','\\sqrt[3]{\\square}'],['xⁿ','^{\\square}'],['xₙ','_{\\square}'],['×','\\times '],['÷','\\div '],['±','\\pm '],['=','='],['≠','\\neq '],['<','<'],['>','>'],['≤','\\leq '],['≥','\\geq '],['≈','\\approx '],['π','\\pi '],['°','^{\\circ}'],['%','\\%'],['( )','\\left(\\square\\right)'],['∠','\\angle '],['△','\\triangle '],['⟂','\\perp '],['∥','\\parallel '],['cm²','\\text{cm}^{2}'],['m³','\\text{m}^{3}'],['Rp','\\text{Rp}'],['→','\\rightarrow '],['∞','\\infty '],['Σ','\\sum ']];
 let LF=null;
 document.addEventListener('focusin',ev=>{const t=ev.target;if(E&&t.closest&&t.closest('.ed')&&/^(INPUT|TEXTAREA)$/.test(t.tagName)&&!['file','radio','checkbox'].includes(t.type)&&t.id!='eqin')LF=t});
@@ -396,6 +407,21 @@ function eqBar(){return `<div class="eqb"><b>∑ Penulis Rumus</b><span class="h
 function eqAdd(i){const el=$('#eqin'),t=EQ[i][1],a=el.selectionStart==null?el.value.length:el.selectionStart,b=el.selectionEnd==null?a:el.selectionEnd;el.value=el.value.slice(0,a)+t+el.value.slice(b);const k=el.value.indexOf('\\square',a);el.focus();if(k>=0&&k<a+t.length)el.setSelectionRange(k,k+7);else el.setSelectionRange(a+t.length,a+t.length);eqPv()}
 function eqPv(){const v=$('#eqin').value.trim();$('#eqpv').innerHTML=v?kx(v,0):''}
 function eqIns(){const v=$('#eqin').value.trim();if(!v)return toast('Tulis rumus dulu.',1);const el=LF;if(!el||!document.body.contains(el))return toast('Klik dulu kolom stimulus/pertanyaan/opsi tujuan rumus.',1);const a=el.selectionStart,b=el.selectionEnd,ins='$'+v+'$';el.value=el.value.slice(0,a)+ins+el.value.slice(b);el.focus();el.setSelectionRange(a+ins.length,a+ins.length);el.dispatchEvent(new Event('input',{bubbles:true}));toast('Rumus disisipkan')}
+let ET={d:[['',''],['','']],h:true};
+const tbRows=()=>ET.d.map((r,i)=>'<tr>'+r.map((c,j)=>`<td><input value="${esc(c)}" placeholder="${i==0&&ET.h?'Judul':''}" oninput="ET.d[${i}][${j}]=this.value"></td>`).join('')+'</tr>').join('');
+function tbBox(){return `<div class="eqb"><b>▦ Pembuat Tabel</b><span class="hint"> Tabel disisipkan ke teks stimulus (boleh digabung dengan teks dan rumus $…$).</span><div class="tw"><table class="tbg" id="tbg">${tbRows()}</table></div>
+<div class="eqbtns"><button type="button" onclick="tbAct('r+')">+ Baris</button><button type="button" onclick="tbAct('r-')">− Baris</button><button type="button" onclick="tbAct('c+')">+ Kolom</button><button type="button" onclick="tbAct('c-')">− Kolom</button></div>
+<label style="font-weight:700"><input type="checkbox" ${ET.h?'checked':''} onchange="ET.h=this.checked;$('#tbg').innerHTML=tbRows()"> Baris pertama = judul kolom</label>
+<p><button type="button" class="btn sm" onclick="tbIns()">⤵ Sisipkan tabel ke stimulus</button></p></div>`}
+function tbAct(a){const n=ET.d[0].length;
+if(a=='r+'&&ET.d.length<15)ET.d.push(Array(n).fill(''));if(a=='r-'&&ET.d.length>1)ET.d.pop();
+if(a=='c+'&&n<8)ET.d.forEach(r=>r.push(''));if(a=='c-'&&n>1)ET.d.forEach(r=>r.pop());
+$('#tbg').innerHTML=tbRows()}
+function tbIns(){const el=$('#e_st');if(!el)return;
+const w=r=>'| '+r.map(c=>String(c).replace(/\|/g,'/').replace(/\n/g,' ').trim()).join(' | ')+' |',L=ET.d.map(w);
+if(ET.h)L.splice(1,0,'|'+ET.d[0].map(()=>'---').join('|')+'|');
+const v=el.value,a=el.selectionStart==null?v.length:el.selectionStart,pre=a&&v[a-1]!='\n'?'\n':'',post=a<v.length&&v[a]!='\n'?'\n':'';
+el.value=v.slice(0,a)+pre+L.join('\n')+post+v.slice(a);el.dispatchEvent(new Event('input',{bubbles:true}));toast('Tabel disisipkan ke stimulus')}
 let PT=null;
 async function upFile(f){if(f.size>10e6){toast('Ukuran file maksimal 10 MB',1);return null}const path=Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error}=await sb.storage.from('lampiran').upload(path,f,{contentType:f.type||'application/octet-stream'});
 if(error){toast(error.message,1);return null}return sb.storage.from('lampiran').getPublicUrl(path).data.publicUrl}
@@ -441,8 +467,8 @@ function eKey(i,c){if(E.tipe=='pg')E.kunci=[i];else if(E.tipe=='mcma'){const k=E
 function eForm(){const e=E,L=(e.kategori||'Benar|Salah').split('|'),st=e.sTipe,inp=['gambar','file','link'].includes(st);
 $('#ap').innerHTML=`<div class="ed"><div class="card"><h2>${e.id?'Edit':'Tambah'} Soal <span class="pill">${esc(pk().mapel)} – ${esc(pk().judul)}</span></h2>
 ${eqBar()}<label class="f">Jenis soal</label><select onchange="eTipe(this.value)">${Object.keys(TIPE).map(k=>`<option value="${k}" ${k==e.tipe?'selected':''}>${TIPE[k]}</option>`).join('')}</select>
-<label class="f">Stimulus</label><select onchange="E.sTipe=this.value;eForm()">${[['none','Tanpa stimulus'],['teks','Teks (tulis manual)'],['gambar','Gambar (unggah / URL)'],['grafik','Grafik batang (data manual)'],['file','File Word/PDF/Slide (unggah / URL)'],['link','Link']].map(x=>`<option value="${x[0]}" ${x[0]==st?'selected':''}>${x[1]}</option>`).join('')}</select>
-${st=='teks'?`<textarea onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Tulis teks stimulus">${esc(e.stimulus)}</textarea>`:''}
+<label class="f">Stimulus</label><select onchange="E.sTipe=this.value;eForm()">${[['none','Tanpa stimulus'],['teks','Teks & tabel (tulis manual)'],['gambar','Gambar (unggah / URL)'],['grafik','Grafik batang (data manual)'],['file','File Word/PDF/Slide (unggah / URL)'],['link','Link']].map(x=>`<option value="${x[0]}" ${x[0]==st?'selected':''}>${x[1]}</option>`).join('')}</select>
+${st=='teks'?`<textarea id="e_st" onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Tulis teks stimulus">${esc(e.stimulus)}</textarea>${tbBox()}`:''}
 ${st=='grafik'?`<textarea onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Judul grafik&#10;Senin:10&#10;Selasa:25">${esc(e.stimulus)}</textarea><p class="hint">Baris pertama = judul. Baris berikutnya = Label:Nilai.</p>`:''}
 ${inp?`<input id="e_s" onfocus="PT='s'" value="${esc(e.stimulus)}" placeholder="https://…" oninput="E.stimulus=this.value;lp()">${st!='link'?`<label class="f">Unggah ${st=='gambar'?'gambar':'dokumen (pdf, docx, pptx) atau gambar'} — mengganti isi di atas</label><input type="file" accept="${st=='gambar'?'image/*':'.pdf,.doc,.docx,.ppt,.pptx,image/*'}" onchange="upTo(this,'e_s',u=>{E.stimulus=u.url;if(u.img)E.sTipe='gambar';eForm()})">`:''}`:''}
 <div class="pz" tabindex="0" onfocus="PT='s'">📋 Klik di sini lalu tekan Ctrl+V untuk menempel gambar sebagai stimulus</div>
