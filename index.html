@@ -86,17 +86,20 @@ td{padding:9px;border-bottom:2px solid var(--soft);vertical-align:top}
 .mb{position:fixed;inset:0;background:rgba(40,0,8,.5);z-index:20;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 12px}
 .md{background:#fff;border-radius:26px;padding:24px;width:100%;max-width:760px;position:relative;border:4px solid var(--pink)}.x{position:absolute;right:14px;top:8px;border:0;background:none;font-size:30px;cursor:pointer;color:var(--r)}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2b2b33;color:#fff;padding:12px 22px;border-radius:99px;z-index:50;display:none;max-width:90vw;font-weight:700}#toast.e{background:var(--r)}
+.hist{display:flex;align-items:flex-end;gap:6px;height:170px;padding:4px 4px 0;border-bottom:3px solid var(--pink)}
+.hist .hc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:12px;font-weight:800}
+.hist .hc i{display:block;width:100%;background:var(--r);border-radius:8px 8px 0 0;min-height:2px}
+.hist-l{display:flex;gap:6px;font-size:11px;color:var(--m);text-align:center;font-weight:700;margin-top:4px}.hist-l span{flex:1}
+.hb{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}.hb .nm{width:160px;flex:none;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .tr{flex:1;background:var(--soft);border-radius:99px;height:16px;overflow:hidden}.hb .tr i{display:block;height:100%;background:var(--r);border-radius:99px}.hb b{width:46px;text-align:right}
+.tag{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:800;background:var(--pink);color:var(--r);white-space:nowrap}.tag.g{background:#e8f6ec;color:#1a8f3c}.tag.y{background:#fff6d9;color:#9a6b00}
+.scr{max-height:360px;overflow:auto}
 .opimg{max-width:100%;max-height:220px;border-radius:10px;vertical-align:middle}
 .pz{border:2.5px dashed var(--r);border-radius:14px;padding:12px;text-align:center;color:var(--r);font-size:13px;font-weight:700;margin:8px 0;cursor:text}.pz:focus{background:var(--soft);outline:none}
 .testmode,.testmode *{user-select:none;-webkit-user-select:none}.testmode input,.testmode label{user-select:auto}
 .eqb{background:var(--soft);border:2.5px dashed var(--pink);border-radius:16px;padding:12px;margin-bottom:10px}
 .eqbtns{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.eqbtns button{border:2px solid var(--pink);background:#fff;border-radius:10px;padding:4px 9px;font:700 14px 'Nunito',sans-serif;cursor:pointer;min-width:34px;color:var(--t)}.eqbtns button:hover{background:var(--pink)}
 .eqpv{min-height:36px;padding:6px 2px;font-size:19px}.katex{font-size:1.1em}
-.stim .tbw{overflow-x:auto;margin:8px 0}
-.stim table.tb{width:auto;max-width:100%;border:2px solid var(--r);background:#fff;font-size:16px;white-space:normal}
-.stim table.tb th,.stim table.tb td{border:1.5px solid var(--r);padding:7px 12px;text-align:left;border-radius:0!important;vertical-align:middle}
-.stim table.tb th{background:var(--r);color:#fff}
-.tbg{width:auto}.tbg td{padding:3px;border:0}.tbg input{min-width:90px;padding:7px 9px}
 @media print{body.testmode{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:760px){.hero,.ed,.g2{grid-template-columns:1fr}.ed .pv{position:static}.hero{padding:22px}.pod{gap:6px}.opt{font-size:17px}}
@@ -209,7 +212,7 @@ const x=v.split('?')[0].toLowerCase();if(/\.pdf$/.test(x))return `<iframe src="$
 if(/\.(docx?|pptx?|xlsx?)$/.test(x))return `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(v)}"></iframe>`;
 if(/\.(png|jpe?g|gif|webp)$/.test(x))return `<img src="${url(v)}" alt="">`;return `<a href="${url(v)}" target="_blank" rel="noopener">Buka lampiran stimulus</a>`}
 function sHTML(t,v){if(!t||t=='none'||!v)return '';let b='';
-if(t=='teks')b=mtT(v);else if(t=='gambar')b=url(v)?`<img src="${url(v)}" alt="Stimulus gambar">`:'';else if(t=='grafik')b=chart(v);else b=emb(v);
+if(t=='teks')b=mt(v);else if(t=='gambar')b=url(v)?`<img src="${url(v)}" alt="Stimulus gambar">`:'';else if(t=='grafik')b=chart(v);else b=emb(v);
 return `<div class="stim">${b}</div>`}
 function oH(o){const p=pO(o);return p.img?`<span><img class="opimg" src="${url(p.img)}" alt="">${p.cap?'<br>'+mt(p.cap):''}</span>`:`<span>${mt(p.cap)}</span>`}
 function qHTML(q,n,A,mode,p){const a=A[q.id],dis=mode=='key'?'disabled':'',ky=mode=='key'?q.kunci||[]:null,nm=p+q.id,P=q.perm||q.opsi.map((_,i)=>i);let h=sHTML(q.sTipe,q.stimulus)+`<p class="qt"><span class="qn">${n}</span>${mt(q.pertanyaan,true)}</p>`;
@@ -245,9 +248,9 @@ function logout(){S.tok=null;S.me=null;try{sessionStorage.removeItem('adm')}catc
 
 /* ===== Panel admin ===== */
 function vAdmin(t){t=typeof t=='string'?t:'paket';
-const tb=[['paket','Paket & Rilis'],['soal','Bank Soal'],['cfg','Landing Page'],['hasil','Hasil Tes'],['agt','Anggota']];
+const tb=[['paket','Paket & Rilis'],['soal','Bank Soal'],['cfg','Landing Page'],['hasil','Hasil Tes'],['analisis','📊 Analisis Hasil'],['agt','Anggota']];
 $('#app').innerHTML=`<div class="row"><h2>Panel Admin <span class="pill">${esc(S.me.username)}</span></h2><button class="b2 sm" onclick="logout()">Keluar</button></div><div class="tabs">${tb.map(x=>`<button class="${x[0]==t?'btn':'b2'} sm" onclick="vAdmin('${x[0]}')">${x[1]}</button>`).join('')}</div><div id="ap">Memuat…</div>`;
-T(async()=>{await({paket:aPaket,soal:aSoal,cfg:aCfg,hasil:aHasil,agt:aAgt})[t]()})}
+T(async()=>{await({paket:aPaket,soal:aSoal,cfg:aCfg,hasil:aHasil,analisis:aAnalisis,agt:aAgt})[t]()})}
 
 /* -- Paket & rilis -- */
 async function aPaket(){const d=await call('publik');S.pkt=d.paket;
@@ -394,12 +397,6 @@ toast(L.length+' soal berhasil diimpor ke paket');IM.items=[];await aSoal()})}
 /* ===== Rumus matematika (KaTeX) ===== */
 function kx(t,d){try{if(window.katex)return katex.renderToString(t,{throwOnError:false,displayMode:!!d,strict:'ignore'})}catch(e){}return esc((d?'$$':'$')+t+(d?'$$':'$'))}
 function mt(v,br){v=String(v==null?'':v).replace(/\\\$/g,'\u0001');return v.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g).map((p,i)=>{if(i%2){const dd=p.slice(0,2)=='$$',t=(dd?p.slice(2,-2):p.slice(1,-1)).replace(/\u0001/g,'\\$');return kx(t,dd)}const h=esc(p.replace(/\u0001/g,'$'));return br?h.replace(/\n/g,'<br>'):h}).join('')}
-function mtT(v){const L=String(v==null?'':v).split('\n'),out=[];let tx=[],tb=[];
-const isT=l=>/^\s*\|.*\|\s*$/.test(l),sep=l=>/^\s*\|(\s*:?-{2,}:?\s*\|)+\s*$/.test(l);
-const fl=()=>{if(tx.length){out.push(mt(tx.join('\n'),true));tx=[]}
-if(tb.length){const hd=tb.length>1&&sep(tb[1]),rows=tb.filter((l,i)=>!(hd&&i==1)).map(l=>l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim()));
-out.push('<div class="tbw"><table class="tb">'+rows.map((r,i)=>'<tr>'+r.map(c=>(hd&&i==0?'<th>':'<td>')+mt(c)+(hd&&i==0?'</th>':'</td>')).join('')+'</tr>').join('')+'</table></div>');tb=[]}};
-L.forEach(l=>{if(isT(l)){if(tx.length)fl();tb.push(l)}else{if(tb.length)fl();tx.push(l)}});fl();return out.join('')}
 const EQ=[['a⁄b','\\frac{\\square}{\\square}'],['campuran','\\square\\frac{\\square}{\\square}'],['√','\\sqrt{\\square}'],['³√','\\sqrt[3]{\\square}'],['xⁿ','^{\\square}'],['xₙ','_{\\square}'],['×','\\times '],['÷','\\div '],['±','\\pm '],['=','='],['≠','\\neq '],['<','<'],['>','>'],['≤','\\leq '],['≥','\\geq '],['≈','\\approx '],['π','\\pi '],['°','^{\\circ}'],['%','\\%'],['( )','\\left(\\square\\right)'],['∠','\\angle '],['△','\\triangle '],['⟂','\\perp '],['∥','\\parallel '],['cm²','\\text{cm}^{2}'],['m³','\\text{m}^{3}'],['Rp','\\text{Rp}'],['→','\\rightarrow '],['∞','\\infty '],['Σ','\\sum ']];
 let LF=null;
 document.addEventListener('focusin',ev=>{const t=ev.target;if(E&&t.closest&&t.closest('.ed')&&/^(INPUT|TEXTAREA)$/.test(t.tagName)&&!['file','radio','checkbox'].includes(t.type)&&t.id!='eqin')LF=t});
@@ -407,21 +404,6 @@ function eqBar(){return `<div class="eqb"><b>∑ Penulis Rumus</b><span class="h
 function eqAdd(i){const el=$('#eqin'),t=EQ[i][1],a=el.selectionStart==null?el.value.length:el.selectionStart,b=el.selectionEnd==null?a:el.selectionEnd;el.value=el.value.slice(0,a)+t+el.value.slice(b);const k=el.value.indexOf('\\square',a);el.focus();if(k>=0&&k<a+t.length)el.setSelectionRange(k,k+7);else el.setSelectionRange(a+t.length,a+t.length);eqPv()}
 function eqPv(){const v=$('#eqin').value.trim();$('#eqpv').innerHTML=v?kx(v,0):''}
 function eqIns(){const v=$('#eqin').value.trim();if(!v)return toast('Tulis rumus dulu.',1);const el=LF;if(!el||!document.body.contains(el))return toast('Klik dulu kolom stimulus/pertanyaan/opsi tujuan rumus.',1);const a=el.selectionStart,b=el.selectionEnd,ins='$'+v+'$';el.value=el.value.slice(0,a)+ins+el.value.slice(b);el.focus();el.setSelectionRange(a+ins.length,a+ins.length);el.dispatchEvent(new Event('input',{bubbles:true}));toast('Rumus disisipkan')}
-let ET={d:[['',''],['','']],h:true};
-const tbRows=()=>ET.d.map((r,i)=>'<tr>'+r.map((c,j)=>`<td><input value="${esc(c)}" placeholder="${i==0&&ET.h?'Judul':''}" oninput="ET.d[${i}][${j}]=this.value"></td>`).join('')+'</tr>').join('');
-function tbBox(){return `<div class="eqb"><b>▦ Pembuat Tabel</b><span class="hint"> Tabel disisipkan ke teks stimulus (boleh digabung dengan teks dan rumus $…$).</span><div class="tw"><table class="tbg" id="tbg">${tbRows()}</table></div>
-<div class="eqbtns"><button type="button" onclick="tbAct('r+')">+ Baris</button><button type="button" onclick="tbAct('r-')">− Baris</button><button type="button" onclick="tbAct('c+')">+ Kolom</button><button type="button" onclick="tbAct('c-')">− Kolom</button></div>
-<label style="font-weight:700"><input type="checkbox" ${ET.h?'checked':''} onchange="ET.h=this.checked;$('#tbg').innerHTML=tbRows()"> Baris pertama = judul kolom</label>
-<p><button type="button" class="btn sm" onclick="tbIns()">⤵ Sisipkan tabel ke stimulus</button></p></div>`}
-function tbAct(a){const n=ET.d[0].length;
-if(a=='r+'&&ET.d.length<15)ET.d.push(Array(n).fill(''));if(a=='r-'&&ET.d.length>1)ET.d.pop();
-if(a=='c+'&&n<8)ET.d.forEach(r=>r.push(''));if(a=='c-'&&n>1)ET.d.forEach(r=>r.pop());
-$('#tbg').innerHTML=tbRows()}
-function tbIns(){const el=$('#e_st');if(!el)return;
-const w=r=>'| '+r.map(c=>String(c).replace(/\|/g,'/').replace(/\n/g,' ').trim()).join(' | ')+' |',L=ET.d.map(w);
-if(ET.h)L.splice(1,0,'|'+ET.d[0].map(()=>'---').join('|')+'|');
-const v=el.value,a=el.selectionStart==null?v.length:el.selectionStart,pre=a&&v[a-1]!='\n'?'\n':'',post=a<v.length&&v[a]!='\n'?'\n':'';
-el.value=v.slice(0,a)+pre+L.join('\n')+post+v.slice(a);el.dispatchEvent(new Event('input',{bubbles:true}));toast('Tabel disisipkan ke stimulus')}
 let PT=null;
 async function upFile(f){if(f.size>10e6){toast('Ukuran file maksimal 10 MB',1);return null}const path=Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error}=await sb.storage.from('lampiran').upload(path,f,{contentType:f.type||'application/octet-stream'});
 if(error){toast(error.message,1);return null}return sb.storage.from('lampiran').getPublicUrl(path).data.publicUrl}
@@ -467,8 +449,8 @@ function eKey(i,c){if(E.tipe=='pg')E.kunci=[i];else if(E.tipe=='mcma'){const k=E
 function eForm(){const e=E,L=(e.kategori||'Benar|Salah').split('|'),st=e.sTipe,inp=['gambar','file','link'].includes(st);
 $('#ap').innerHTML=`<div class="ed"><div class="card"><h2>${e.id?'Edit':'Tambah'} Soal <span class="pill">${esc(pk().mapel)} – ${esc(pk().judul)}</span></h2>
 ${eqBar()}<label class="f">Jenis soal</label><select onchange="eTipe(this.value)">${Object.keys(TIPE).map(k=>`<option value="${k}" ${k==e.tipe?'selected':''}>${TIPE[k]}</option>`).join('')}</select>
-<label class="f">Stimulus</label><select onchange="E.sTipe=this.value;eForm()">${[['none','Tanpa stimulus'],['teks','Teks & tabel (tulis manual)'],['gambar','Gambar (unggah / URL)'],['grafik','Grafik batang (data manual)'],['file','File Word/PDF/Slide (unggah / URL)'],['link','Link']].map(x=>`<option value="${x[0]}" ${x[0]==st?'selected':''}>${x[1]}</option>`).join('')}</select>
-${st=='teks'?`<textarea id="e_st" onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Tulis teks stimulus">${esc(e.stimulus)}</textarea>${tbBox()}`:''}
+<label class="f">Stimulus</label><select onchange="E.sTipe=this.value;eForm()">${[['none','Tanpa stimulus'],['teks','Teks (tulis manual)'],['gambar','Gambar (unggah / URL)'],['grafik','Grafik batang (data manual)'],['file','File Word/PDF/Slide (unggah / URL)'],['link','Link']].map(x=>`<option value="${x[0]}" ${x[0]==st?'selected':''}>${x[1]}</option>`).join('')}</select>
+${st=='teks'?`<textarea onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Tulis teks stimulus">${esc(e.stimulus)}</textarea>`:''}
 ${st=='grafik'?`<textarea onfocus="PT='s'" oninput="E.stimulus=this.value;lp()" placeholder="Judul grafik&#10;Senin:10&#10;Selasa:25">${esc(e.stimulus)}</textarea><p class="hint">Baris pertama = judul. Baris berikutnya = Label:Nilai.</p>`:''}
 ${inp?`<input id="e_s" onfocus="PT='s'" value="${esc(e.stimulus)}" placeholder="https://…" oninput="E.stimulus=this.value;lp()">${st!='link'?`<label class="f">Unggah ${st=='gambar'?'gambar':'dokumen (pdf, docx, pptx) atau gambar'} — mengganti isi di atas</label><input type="file" accept="${st=='gambar'?'image/*':'.pdf,.doc,.docx,.ppt,.pptx,image/*'}" onchange="upTo(this,'e_s',u=>{E.stimulus=u.url;if(u.img)E.sTipe='gambar';eForm()})">`:''}`:''}
 <div class="pz" tabindex="0" onfocus="PT='s'">📋 Klik di sini lalu tekan Ctrl+V untuk menempel gambar sebagai stimulus</div>
@@ -493,6 +475,79 @@ $('#ap').innerHTML=`<div class="row"><p>${r.length} hasil tes</p><button class="
 function xl(){const rows=window._H.map(r=>({Waktu:new Date(r.waktu).toLocaleString('id-ID'),Nama:r.nama,Kecamatan:r.kecamatan,Sekolah:r.sekolah,Kelas:r.kelas,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,'Benar penuh':r.benar,'Jumlah soal':r.total,Pelanggaran:r.pelanggaran,Catatan:r.catatan}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Hasil');XLSX.writeFile(wb,'hasil_cbt_tka.xlsx')}
 function detH(id){const r=window._H.find(x=>x.id==id),L=Array.isArray(r.jejak)?r.jejak:[];modal(`<h3>Catatan Anti-Curang – ${esc(r.nama)}</h3><p>${esc(r.catatan||'Tidak ada catatan sistem.')}</p>${L.length?`<table><tr><th>Detik ke-</th><th>Kejadian</th></tr>${L.map(x=>`<tr><td>${esc(x.s)}</td><td>${esc(x.r)}</td></tr>`).join('')}</table>`:'<p>Tidak ada rincian pelanggaran.</p>'}`)}
 function hapusH(id){if(confirm('Hapus hasil ini?'))T(async()=>{await call('hasil_hapus',{id});aHasil()})}
+
+/* ===== Analisis Hasil (untuk evaluasi) ===== */
+let AN={rows:[],f:{mapel:'',nomor:'',kec:'',sek:'',kkm:70},det:{},butir:null};
+try{const k=parseInt(localStorage.getItem('kkm'));if(k>0)AN.f.kkm=k}catch(e){}
+const _avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0,_med=a=>{if(!a.length)return 0;const b=a.slice().sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2},_sd=a=>{if(a.length<2)return 0;const m=_avg(a);return Math.sqrt(a.reduce((t,x)=>t+(x-m)*(x-m),0)/a.length)},f1=x=>String(Math.round(x*10)/10);
+async function aAnalisis(){AN.rows=await call('hasil_list');if(!S.pkt.length)S.pkt=(await call('publik')).paket;anRender()}
+function anRows(){const f=AN.f;return AN.rows.filter(r=>(!f.mapel||r.mapel==f.mapel)&&(!f.nomor||r.paket_no==f.nomor)&&(!f.kec||r.kecamatan==f.kec)&&(!f.sek||r.sekolah==f.sek))}
+function anGrp(R,fn){const m={};R.forEach(r=>{const k=fn(r);(m[k]=m[k]||[]).push(r)});return Object.keys(m).map(k=>{const v=m[k].map(r=>r.skor);return{k,n:v.length,avg:_avg(v),min:Math.min(...v),max:Math.max(...v),tuntas:v.filter(x=>x>=AN.f.kkm).length/v.length*100}})}
+function anSet(k,v){AN.f[k]=v;if(k=='kec')AN.f.sek='';if(k=='kkm'){try{localStorage.setItem('kkm',v)}catch(e){}}AN.butir=null;anRender()}
+const nmP=k=>k.replace(/Paket 0?(\d+)/,'Paket $1');
+function anRec(R,gk,gs,gm){const o=[],n=R.length,sc=R.map(r=>r.skor),kkm=AN.f.kkm,tp=sc.filter(v=>v>=kkm).length/n*100,sd=_sd(sc);
+o.push(tp<50?`Ketuntasan rendah (${Math.round(tp)}% mencapai KKM ${kkm}). Disarankan pembelajaran ulang klasikal pada materi yang diujikan, bukan hanya remedial individu.`:tp<75?`Ketuntasan sedang (${Math.round(tp)}%). Rancang remedial untuk ${n-sc.filter(v=>v>=kkm).length} tes di bawah KKM, dan pengayaan untuk yang sudah tuntas.`:`Capaian baik (${Math.round(tp)}% tuntas). Pertahankan, dan beri pengayaan penalaran untuk peserta dengan nilai tertinggi.`);
+if(sd>20)o.push(`Sebaran nilai lebar (simpangan baku ${f1(sd)}): ada kesenjangan kemampuan, pertimbangkan pembelajaran berdiferensiasi atau kelompok belajar sebaya.`);else if(sd<8&&n>=10)o.push(`Nilai sangat seragam (simpangan baku ${f1(sd)}): periksa apakah soal terlalu mudah/sulit sehingga kurang membedakan kemampuan.`);
+const k3=gk.filter(x=>x.n>=3);if(k3.length>=2)o.push(`Kecamatan tertinggi: ${k3[0].k} (rata-rata ${f1(k3[0].avg)}); terendah: ${k3[k3.length-1].k} (${f1(k3[k3.length-1].avg)}). Prioritaskan pendampingan pada kecamatan terendah.`);
+const s3=gs.filter(x=>x.n>=3);if(s3.length>=2)o.push(`Sekolah dengan rata-rata terendah: ${s3.slice(-3).reverse().map(x=>x.k.replace(/ \(.*\)$/,'')+' ('+f1(x.avg)+')').join(', ')}.`);
+if(!AN.f.mapel){const m=anGrp(R,r=>r.mapel);if(m.length==2&&Math.abs(m[0].avg-m[1].avg)>=8){const lo=m[0].avg<m[1].avg?m[0]:m[1];o.push(`Capaian ${lo.k} (${f1(lo.avg)}) lebih rendah dibanding mapel lain; beri penguatan pada mapel ini.`)}}
+const pl=R.filter(r=>r.pelanggaran>0).length;if(pl)o.push(`${pl} tes (${Math.round(pl/n*100)}%) tercatat ada pelanggaran anti-curang. Tinjau di tab Hasil Tes → Detail sebelum nilai dijadikan dasar keputusan.`);
+if(AN.butir){const B=AN.butir.soal,sk=B.filter(x=>x.p<.3),ng=B.filter(x=>x.D!==null&&x.D<0),lo=B.filter(x=>x.D!==null&&x.D>=0&&x.D<.2);
+if(sk.length)o.push(`Soal sukar (tingkat kesukaran <30%): no. ${sk.map(x=>x.no).join(', ')}. Periksa kunci dan kalimat soal; bila valid, jadikan fokus penjelasan ulang materi.`);
+if(ng.length)o.push(`Daya pembeda negatif pada soal no. ${ng.map(x=>x.no).join(', ')}: peserta berkemampuan rendah justru lebih banyak benar; kunci jawaban kemungkinan keliru.`);
+if(lo.length)o.push(`Daya pembeda rendah (<0,20) pada soal no. ${lo.map(x=>x.no).join(', ')}: revisi soal atau opsi pengecoh.`);
+if(AN.butir.alpha!=null)o.push(`Reliabilitas paket (Cronbach α) = ${AN.butir.alpha.toFixed(2)} (${AN.butir.alpha>=.7?'baik':AN.butir.alpha>=.5?'cukup':'rendah; paket kurang konsisten mengukur kemampuan'}).`)}
+else if(AN.f.mapel&&AN.f.nomor)o.push('Klik "Hitung analisis butir soal" di bawah untuk melihat soal yang sukar, daya pembeda, dan reliabilitas paket.');
+return o}
+function anRender(){const f=AN.f,R=anRows(),n=R.length,sc=R.map(r=>r.skor),kkm=f.kkm;
+const kecs=[...new Set(AN.rows.map(r=>r.kecamatan))].sort(),seks=[...new Set(AN.rows.filter(r=>!f.kec||r.kecamatan==f.kec).map(r=>r.sekolah))].sort();
+let h=`<div class="card"><h2>📊 Analisis Hasil untuk Evaluasi</h2><p class="hint">Data dihitung dari seluruh hasil tes yang tersimpan. Gunakan filter untuk membandingkan mapel, paket, kecamatan, atau sekolah.</p>
+<div class="g2"><div><label class="f">Mata pelajaran</label><select onchange="anSet('mapel',this.value)"><option value="">Semua</option>${MAPEL.map(m=>`<option ${f.mapel==m?'selected':''}>${m}</option>`).join('')}</select></div>
+<div><label class="f">Paket</label><select onchange="anSet('nomor',this.value)"><option value="">Semua</option>${[1,2,3,4,5,6,7,8,9,10].map(x=>`<option value="${x}" ${f.nomor==x?'selected':''}>Paket ${x}</option>`).join('')}</select></div>
+<div><label class="f">Kecamatan</label><select onchange="anSet('kec',this.value)"><option value="">Semua</option>${kecs.map(x=>`<option value="${esc(x)}" ${f.kec==x?'selected':''}>${esc(x)}</option>`).join('')}</select></div>
+<div><label class="f">Sekolah</label><select onchange="anSet('sek',this.value)"><option value="">Semua</option>${seks.map(x=>`<option value="${esc(x)}" ${f.sek==x?'selected':''}>${esc(x)}</option>`).join('')}</select></div></div>
+<div class="row" style="margin-top:12px"><label style="font-weight:800">KKM / batas tuntas <input type="number" min="1" max="100" value="${kkm}" style="width:90px;display:inline-block" onchange="anSet('kkm',Math.min(100,Math.max(1,+this.value||70)))"></label><button class="btn sm" onclick="anXls()">⬇ Unduh Analisis (.xlsx)</button></div></div>`;
+if(!n){$('#ap').innerHTML=h+'<div class="card">Belum ada hasil tes untuk filter ini.</div>';return}
+const tun=sc.filter(v=>v>=kkm).length,pel=R.filter(r=>r.pelanggaran>0).length,bins=Array(10).fill(0);sc.forEach(v=>bins[Math.min(9,Math.floor(v/10))]++);const mb=Math.max(1,...bins);
+const gk=anGrp(R,r=>r.kecamatan).sort((a,b)=>b.avg-a.avg),gs=anGrp(R,r=>r.sekolah+' ('+r.kecamatan+')').sort((a,b)=>b.avg-a.avg),gm=anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1);
+const gt=(g,c)=>`<div class="scr"><table><tr><th>${c}</th><th>Tes</th><th>Rata-rata</th><th>Min</th><th>Maks</th><th>% tuntas</th></tr>${g.map(x=>`<tr><td>${esc(nmP(x.k))}</td><td>${x.n}</td><td><b>${f1(x.avg)}</b></td><td>${x.min}</td><td>${x.max}</td><td><span class="tag ${x.tuntas>=75?'g':x.tuntas>=50?'y':''}">${Math.round(x.tuntas)}%</span></td></tr>`).join('')}</table></div>`;
+h+=`<div class="stats">${[['👥','Jumlah tes',n],['⭐','Rata-rata',f1(_avg(sc))],['📍','Median',f1(_med(sc))],['🔝','Tertinggi',Math.max(...sc)],['🔻','Terendah',Math.min(...sc)],['📏','Simpangan baku',f1(_sd(sc))],['✅','Tuntas (≥'+kkm+')',tun+' ('+Math.round(tun/n*100)+'%)'],['🔁','Perlu remedial',n-tun],['⚠','Ada pelanggaran',pel+' tes']].map(x=>`<div class="st"><span class="ic">${x[0]}</span><b style="font-size:26px">${x[2]}</b><span>${x[1]}</span></div>`).join('')}</div>
+<div class="card"><h3>💡 Rekomendasi Evaluasi</h3><ul style="line-height:1.7;margin:0;padding-left:20px">${anRec(R,gk,gs,gm).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+<div class="card"><h3>Sebaran Nilai</h3><div class="hist">${bins.map(c=>`<div class="hc"><span>${c}</span><i style="height:${Math.round(c/mb*130)}px"></i></div>`).join('')}</div><div class="hist-l">${bins.map((c,i)=>`<span>${i*10}${i==9?'–100':'–'+(i*10+9)}</span>`).join('')}</div></div>
+<div class="card"><h3>Per Mata Pelajaran & Paket</h3>${gt(gm,'Mapel – Paket')}</div>
+<div class="card"><h3>Per Kecamatan</h3>${gk.map(x=>`<div class="hb"><span class="nm">${esc(x.k)}</span><div class="tr"><i style="width:${x.avg}%"></i></div><b>${f1(x.avg)}</b><span class="hint" style="margin:0;width:54px">n=${x.n}</span></div>`).join('')}</div>
+<div class="card"><h3>Per Sekolah</h3>${gt(gs,'Sekolah (Kecamatan)')}</div>
+${anButirHTML()}
+<div class="card"><h3>Peserta di Bawah KKM (${n-tun})</h3><p class="hint">Daftar untuk remedial, diurutkan dari nilai terendah (maksimal 100 baris; selengkapnya di unduhan .xlsx).</p><div class="scr"><table><tr><th>Nama</th><th>Sekolah</th><th>Kelas</th><th>Mapel</th><th>Paket</th><th>Nilai</th></tr>${R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).slice(0,100).map(r=>`<tr><td>${esc(r.nama)}</td><td>${esc(r.sekolah)}</td><td>${esc(r.kelas)}</td><td>${esc(r.mapel)}</td><td>${r.paket_no}</td><td><b>${r.skor}</b></td></tr>`).join('')||'<tr><td colspan="6">Semua peserta mencapai KKM 🎉</td></tr>'}</table></div></div>`;
+$('#ap').innerHTML=h}
+function anButirHTML(){const f=AN.f;
+if(!f.mapel||!f.nomor)return `<div class="card"><h3>🔬 Analisis Butir Soal</h3><p class="hint">Pilih satu mata pelajaran dan satu paket pada filter di atas untuk menganalisis tiap soal (tingkat kesukaran, daya pembeda, reliabilitas).</p></div>`;
+const B=AN.butir;if(!B)return `<div class="card"><h3>🔬 Analisis Butir Soal – ${esc(f.mapel)} Paket ${f.nomor}</h3><p class="hint">Mengukur tiap soal: seberapa sukar dan seberapa baik membedakan peserta pandai dan kurang pandai. Aplikasi perlu memuat rincian jawaban tiap peserta (beberapa detik).</p><button class="btn" onclick="anButir()">Hitung analisis butir soal</button></div>`;
+const tg=(c,t)=>`<span class="tag ${c}">${t}</span>`;
+return `<div class="card"><h3>🔬 Analisis Butir Soal – ${esc(f.mapel)} Paket ${f.nomor}</h3><p class="hint">Dihitung dari ${B.n} peserta${B.skip?` (${B.skip} tes dilewati karena jumlah soal berubah sejak tes dikerjakan)`:''}. ${B.n<30?'⚠ Peserta masih sedikit (<30); anggap hasil sebagai indikasi awal. ':''}Reliabilitas (Cronbach α): <b>${B.alpha==null?'-':B.alpha.toFixed(2)}</b>.</p>
+<div class="scr" style="max-height:520px"><table><tr><th>No</th><th>Jenis</th><th>Pertanyaan</th><th>Tingkat kesukaran</th><th>Daya pembeda</th><th>Saran</th></tr>${B.soal.map(x=>`<tr><td>${x.no}</td><td>${TIPE[x.tipe]||x.tipe}</td><td>${esc(x.q).slice(0,70)}</td><td>${Math.round(x.p*100)}% ${tg(x.p>.7?'y':x.p>=.3?'g':'',x.p>.7?'Mudah':x.p>=.3?'Sedang':'Sukar')}</td><td>${x.D==null?'-':x.D.toFixed(2)+' '+tg(x.D>=.3?'g':x.D>=.2?'y':'',x.D<0?'Periksa kunci':x.D>=.4?'Sangat baik':x.D>=.3?'Baik':x.D>=.2?'Cukup':'Revisi')}</td><td>${esc(x.rec)}</td></tr>`).join('')}</table></div></div>`}
+async function anButir(){const f=AN.f;T(async()=>{const pk=S.pkt.find(p=>p.mapel==f.mapel&&p.nomor==f.nomor);if(!pk)throw new Error('Paket tidak ditemukan.');
+const soal=await call('soal_list',{paket_id:pk.id}),R=AN.rows.filter(r=>r.mapel==f.mapel&&r.paket_no==f.nomor&&(!f.kec||r.kecamatan==f.kec)&&(!f.sek||r.sekolah==f.sek));
+if(!soal.length)throw new Error('Paket ini belum memiliki soal.');if(!R.length)throw new Error('Belum ada hasil untuk paket ini.');
+const need=R.filter(r=>!AN.det[r.id]);let done=0;const q=need.slice();
+await Promise.all(Array.from({length:6},async()=>{while(q.length){const r=q.shift();try{AN.det[r.id]=(await call('hasil',{id:r.id})).detail||[]}catch(e){AN.det[r.id]=[]}toast('Memuat jawaban '+(++done)+' dari '+need.length+'…',0,60000)}}));
+const V=R.filter(r=>Array.isArray(AN.det[r.id])&&AN.det[r.id].length==soal.length),skip=R.length-V.length;
+if(V.length<3)throw new Error('Data terlalu sedikit untuk analisis butir (minimal 3 tes yang jumlah soalnya sesuai).');
+const X=V.map(r=>AN.det[r.id].map(Number)),tot=X.map(a=>a.reduce((x,y)=>x+y,0)),order=X.map((_,i)=>i).sort((a,b)=>tot[b]-tot[a]),k=Math.max(1,Math.round(.27*V.length)),up=order.slice(0,k),lo=order.slice(-k);
+const K=soal.length,items=soal.map((q,i)=>{const col=X.map(r=>r[i]),p=_avg(col),D=V.length>=10?_avg(up.map(j=>X[j][i]))-_avg(lo.map(j=>X[j][i])):null,t=[];
+if(p<.3)t.push('Terlalu sukar: periksa kunci/kalimat soal atau ulas materi');else if(p>.85)t.push('Terlalu mudah: pertimbangkan menaikkan penalaran');
+if(D!==null){if(D<0)t.push('Daya pembeda negatif: kunci kemungkinan salah');else if(D<.2)t.push('Daya pembeda rendah: revisi soal/opsi')}
+return{no:i+1,tipe:q.tipe,q:q.pertanyaan,p,D,rec:t.join('; ')||'Baik, pertahankan'}});
+let alpha=null;if(V.length>=10&&K>=2){const vr=a=>{const m=_avg(a);return a.reduce((t,x)=>t+(x-m)*(x-m),0)/(a.length-1)},vt=vr(tot);if(vt>0)alpha=K/(K-1)*(1-soal.reduce((t,_,i)=>t+vr(X.map(r=>r[i])),0)/vt)}
+AN.butir={soal:items,n:V.length,skip,alpha};toast('Analisis butir selesai',0,2500);anRender()})}
+function anXls(){const R=anRows();if(!R.length)return toast('Tidak ada data untuk diunduh.',1);const kkm=AN.f.kkm,sc=R.map(r=>r.skor),wb=XLSX.utils.book_new(),add=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(a),n);
+add('Ringkasan',[['Jumlah tes',R.length],['Rata-rata',+f1(_avg(sc))],['Median',_med(sc)],['Tertinggi',Math.max(...sc)],['Terendah',Math.min(...sc)],['Simpangan baku',+f1(_sd(sc))],['KKM',kkm],['Tuntas',sc.filter(v=>v>=kkm).length],['Perlu remedial',sc.filter(v=>v<kkm).length],['Tes dengan pelanggaran',R.filter(r=>r.pelanggaran>0).length]].map(x=>({Indikator:x[0],Nilai:x[1]})));
+const bins=Array(10).fill(0);sc.forEach(v=>bins[Math.min(9,Math.floor(v/10))]++);add('Sebaran Nilai',bins.map((c,i)=>({Rentang:i*10+(i==9?'-100':'-'+(i*10+9)),Jumlah:c})));
+const gx=g=>g.map(x=>({Kelompok:nmP(x.k),Tes:x.n,'Rata-rata':+f1(x.avg),Min:x.min,Maks:x.max,'% Tuntas':Math.round(x.tuntas)}));
+add('Per Mapel-Paket',gx(anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1)));add('Per Kecamatan',gx(anGrp(R,r=>r.kecamatan).sort((a,b)=>b.avg-a.avg)));add('Per Sekolah',gx(anGrp(R,r=>r.sekolah+' ('+r.kecamatan+')').sort((a,b)=>b.avg-a.avg)));
+if(AN.butir)add('Analisis Butir',AN.butir.soal.map(x=>({No:x.no,Jenis:TIPE[x.tipe]||x.tipe,Pertanyaan:x.q,'Tingkat kesukaran':+x.p.toFixed(2),'Daya pembeda':x.D==null?'':+x.D.toFixed(2),Saran:x.rec})));
+add('Perlu Remedial',R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).map(r=>({Nama:r.nama,Kecamatan:r.kecamatan,Sekolah:r.sekolah,Kelas:r.kelas,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,Pelanggaran:r.pelanggaran})));
+XLSX.writeFile(wb,'analisis_hasil_cbt_tka.xlsx')}
 
 /* -- Anggota -- */
 async function aAgt(){const [a,p]=await Promise.all([call('admin_list'),call('peserta_list')]);
