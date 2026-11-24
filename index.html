@@ -144,8 +144,8 @@ T(async()=>{const d=await call('publik');S.stat=d.stat;const s=d.stat;$('#st').i
 /* ===== Daftar & tes ===== */
 function vDaftar(){const p=S.peserta;
 if(!p){$('#app').innerHTML=`<div class="card form"><div class="mascot">🦉</div><h2>Ayo Daftar Dulu!</h2><p class="hint">Isi datamu dengan benar ya, teman-teman.</p>
-<label class="f">🧒 Nama Lengkap</label>
-<label class="f">🏫 Nama Sekolah</label>
+<label class="f">🧒 Nama Lengkap</label><input id="d_n" placeholder="">
+<label class="f">🏫 Nama Sekolah</label><input id="d_s" placeholder="">
 <p style="text-align:center"><button class="btn lg" onclick="daftar()">Daftar & Lanjut 🚀</button></p></div>`;return}
 $('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 Halo, ${esc(p.nama)}!</h2><span class="hint">${esc(p.sekolah)}</span></div><button class="b2 sm" onclick="S.peserta=null;vDaftar()">Ganti peserta</button></div><p class="hint" style="font-size:16px">Pilih paket soal yang sudah terbuka, lalu kerjakan dengan teliti ya! 💪</p><div id="pk">Memuat paket…</div>`;
 T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;
