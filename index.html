@@ -133,7 +133,7 @@ function show(v){if(TS&&TS.on)return toast('Selesaikan tes terlebih dahulu.',1);
 if(SUPABASE_URL.indexOf('supabase.co')<0)throw new Error('SUPABASE_URL & SUPABASE_KEY belum diisi di index.html.');
 sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 try{const a=JSON.parse(sessionStorage.getItem('adm'));if(a){S.tok=a.token;S.me=a}}catch(e){}
-const d=await call('publik');S.cfg=d.cfg;S.kec=d.kecamatan;S.stat=d.stat;S.pkt=d.paket;theme();show('dash')}
+const d=await call('publik');S.cfg=d.cfg;S.stat=d.stat;S.pkt=d.paket;theme();show('dash')}
 catch(e){$('#app').innerHTML=`<div class="card"><b>Aplikasi belum siap.</b><p>${esc(e.message)}</p></div>`}})();
 
 /* ===== Dashboard ===== */
@@ -151,7 +151,7 @@ $('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 
 T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;
 $('#pk').innerHTML=MAPEL.map((m,mi)=>`<div class="mp m${mi+1}"><div class="mh"><span class="ic">${mi?'📚':'📐'}</span><h3>${m}</h3></div><div class="pgd">${d.paket.filter(x=>x.mapel==m).map(x=>{const done=d.selesai.includes(x.id),ok=x.rilis&&x.jml>0;
 return `<div class="pc ${done?'done':ok?'':'off'}"><div class="no">${ok||done?x.nomor:'🔒'}</div><b>${esc(x.judul)}</b><small>${x.jml} soal · ${x.durasi} menit</small>${done?'<em>✅ Sudah selesai</em>':ok?`<button class="btn sm" onclick="intro(${x.id})">Kerjakan 🚀</button>`:'<em>Belum dibuka</em>'}</div>`}).join('')}</div></div>`).join('')})}
-function daftar(){T(async()=>{S.peserta=await call('daftar',{nama:$('#d_n').value,kecamatan:'-',sekolah:$('#d_s').value,kelas:'-'});toast('Pendaftaran berhasil');vDaftar()})}
+function daftar(){const n=$('#d_n').value.trim().replace(/\s+/g,' '),sc=$('#d_s').value.trim();if(!n||!sc)return toast('Lengkapi nama dan sekolah.',1);T(async()=>{S.peserta=await call('daftar',{nama:n,sekolah:sc});toast('Pendaftaran berhasil');vDaftar()})}
 const MX=()=>{const v=parseInt(S.cfg.maxPelanggaran);return isNaN(v)?3:v};
 function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(crypto.getRandomValues(new Uint32Array(1))[0]/4294967296*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function intro(id){const x=S.pkt.find(p=>p.id==id),mx=MX();
