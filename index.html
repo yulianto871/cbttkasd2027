@@ -133,7 +133,7 @@ function show(v){if(TS&&TS.on)return toast('Selesaikan tes terlebih dahulu.',1);
 if(SUPABASE_URL.indexOf('supabase.co')<0)throw new Error('SUPABASE_URL & SUPABASE_KEY belum diisi di index.html.');
 sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 try{const a=JSON.parse(sessionStorage.getItem('adm'));if(a){S.tok=a.token;S.me=a}}catch(e){}
-const d=await call('publik');S.cfg=d.cfg;S.stat=d.stat;S.pkt=d.paket;theme();show('dash')}
+const d=await call('publik');S.cfg=d.cfg;S.kec=d.kecamatan;S.stat=d.stat;S.pkt=d.paket;theme();show('dash')}
 catch(e){$('#app').innerHTML=`<div class="card"><b>Aplikasi belum siap.</b><p>${esc(e.message)}</p></div>`}})();
 
 /* ===== Dashboard ===== */
@@ -145,13 +145,15 @@ T(async()=>{const d=await call('publik');S.stat=d.stat;const s=d.stat;$('#st').i
 function vDaftar(){const p=S.peserta;
 if(!p){$('#app').innerHTML=`<div class="card form"><div class="mascot">🦉</div><h2>Ayo Daftar Dulu!</h2><p class="hint">Isi datamu dengan benar ya, teman-teman.</p>
 <label class="f">🧒 Nama Lengkap</label><input id="d_n" placeholder="">
+<label class="f">📍 Kecamatan (Kabupaten Wonosobo)</label><select id="d_k"><option value="">— pilih kecamatan —</option>${S.kec.map(k=>`<option>${k}</option>`).join('')}</select>
 <label class="f">🏫 Nama Sekolah</label><input id="d_s" placeholder="">
+<label class="f">🎒 Kelas</label><input id="d_c" placeholder="">
 <p style="text-align:center"><button class="btn lg" onclick="daftar()">Daftar & Lanjut 🚀</button></p></div>`;return}
-$('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 Halo, ${esc(p.nama)}!</h2><span class="hint">${esc(p.sekolah)}</span></div><button class="b2 sm" onclick="S.peserta=null;vDaftar()">Ganti peserta</button></div><p class="hint" style="font-size:16px">Pilih paket soal yang sudah terbuka, lalu kerjakan dengan teliti ya! 💪</p><div id="pk">Memuat paket…</div>`;
+$('#app').innerHTML=`<div class="card row hello"><div><h2 style="margin:0">👋 Halo, ${esc(p.nama)}!</h2><span class="hint">${esc(p.sekolah)} · Kelas ${esc(p.kelas)} · Kec. ${esc(p.kecamatan)}</span></div><button class="b2 sm" onclick="S.peserta=null;vDaftar()">Ganti peserta</button></div><p class="hint" style="font-size:16px">Pilih paket soal yang sudah terbuka, lalu kerjakan dengan teliti ya! 💪</p><div id="pk">Memuat paket…</div>`;
 T(async()=>{const d=await call('publik',{peserta_id:p.id});S.pkt=d.paket;
 $('#pk').innerHTML=MAPEL.map((m,mi)=>`<div class="mp m${mi+1}"><div class="mh"><span class="ic">${mi?'📚':'📐'}</span><h3>${m}</h3></div><div class="pgd">${d.paket.filter(x=>x.mapel==m).map(x=>{const done=d.selesai.includes(x.id),ok=x.rilis&&x.jml>0;
 return `<div class="pc ${done?'done':ok?'':'off'}"><div class="no">${ok||done?x.nomor:'🔒'}</div><b>${esc(x.judul)}</b><small>${x.jml} soal · ${x.durasi} menit</small>${done?'<em>✅ Sudah selesai</em>':ok?`<button class="btn sm" onclick="intro(${x.id})">Kerjakan 🚀</button>`:'<em>Belum dibuka</em>'}</div>`}).join('')}</div></div>`).join('')})}
-function daftar(){const n=$('#d_n').value.trim().replace(/\s+/g,' '),sc=$('#d_s').value.trim();if(!n||!sc)return toast('Lengkapi nama dan sekolah.',1);T(async()=>{S.peserta=await call('daftar',{nama:n,sekolah:sc});toast('Pendaftaran berhasil');vDaftar()})}
+function daftar(){T(async()=>{S.peserta=await call('daftar',{nama:$('#d_n').value,kecamatan:$('#d_k').value,sekolah:$('#d_s').value,kelas:$('#d_c').value});toast('Pendaftaran berhasil');vDaftar()})}
 const MX=()=>{const v=parseInt(S.cfg.maxPelanggaran);return isNaN(v)?3:v};
 function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(crypto.getRandomValues(new Uint32Array(1))[0]/4294967296*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function intro(id){const x=S.pkt.find(p=>p.id==id),mx=MX();
@@ -235,14 +237,14 @@ $('#app').innerHTML=`<h2>🏆 Leader Board</h2><p class="hint" style="font-size:
 T(async()=>{const r=await call('leaderboard',{mapel:LB.m,nomor:LB.n});if(!r.length){$('#lb').innerHTML='<div class="card" style="text-align:center"><div class="mascot">🦉</div><p>Belum ada hasil tes. Jadilah yang pertama! 🚀</p></div>';return}
 const med=['🥇','🥈','🥉'],top=r.slice(0,3);
 $('#lb').innerHTML=`<div class="pod">${[1,0,2].filter(i=>top[i]).map(i=>`<div class="pd p${i}"><div class="md2">${med[i]}</div><b>${esc(top[i].nama)}</b><small>${esc(top[i].sekolah)}</small><small>${esc(top[i].mapel)} · P${top[i].paket_no}</small><div class="sc">${top[i].skor}</div></div>`).join('')}</div>`+
-(r.length>3?`<div class="card tw"><table><tr><th>#</th><th>Nama</th><th>Sekolah</th><th>Mapel</th><th>Paket</th><th>Nilai</th></tr>${r.slice(3).map((x,i)=>`<tr><td><b>${i+4}</b></td><td>${esc(x.nama)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.mapel)}</td><td>${x.paket_no}</td><td><b style="color:var(--r)">${x.skor}</b></td></tr>`).join('')}</table></div>`:'')})}
+(r.length>3?`<div class="card tw"><table><tr><th>#</th><th>Nama</th><th>Sekolah</th><th>Kecamatan</th><th>Mapel</th><th>Paket</th><th>Nilai</th></tr>${r.slice(3).map((x,i)=>`<tr><td><b>${i+4}</b></td><td>${esc(x.nama)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.kecamatan)}</td><td>${esc(x.mapel)}</td><td>${x.paket_no}</td><td><b style="color:var(--r)">${x.skor}</b></td></tr>`).join('')}</table></div>`:'')})}
 
 /* ===== Unduh PDF ===== */
 function vUnduh(){$('#app').innerHTML=`<div class="card"><h2>📄 Unduh Hasil Tesmu</h2><label class="f">Cari dengan nama lengkap</label><div class="row" style="flex-wrap:nowrap"><input id="u_n" value="${S.peserta?esc(S.peserta.nama):''}"><button class="btn" onclick="cari()">Cari</button></div><div id="u_r" class="tw"></div></div>`}
 function cari(){T(async()=>{const r=await call('cari_hasil',{nama:$('#u_n').value});$('#u_r').innerHTML=r.length?`<table><tr><th>Nama</th><th>Sekolah</th><th>Mapel</th><th>Paket</th><th>Nilai</th><th></th></tr>${r.map(x=>`<tr><td>${esc(x.nama)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.mapel)}</td><td>${x.paket_no}</td><td>${x.skor}</td><td><button class="btn sm" onclick="dl('${x.id}')">PDF</button></td></tr>`).join('')}</table>`:'<p>Tidak ditemukan.</p>'})}
 function dl(id){T(async()=>pdf(await call('hasil',{id})))}
 function pdf(h){const d=new window.jspdf.jsPDF();d.setFillColor(200,16,46);d.rect(0,0,210,24,'F');d.setTextColor(255);d.setFontSize(16);d.text('Hasil '+(S.cfg.judul||'CBT TKA SD'),14,15);d.setTextColor(0);d.setFontSize(11);
-[['Nama',h.nama],['Sekolah',h.sekolah],['Mata Pelajaran',h.mapel+' – Paket '+h.paket_no],['Waktu',new Date(h.waktu).toLocaleString('id-ID')],['Nilai',h.skor],['Benar penuh',h.benar+' dari '+h.total]].forEach((r,i)=>{d.text(r[0],14,38+i*8);d.text(': '+r[1],55,38+i*8)});
+[['Nama',h.nama],['Kecamatan',h.kecamatan],['Sekolah',h.sekolah],['Kelas',h.kelas],['Mata Pelajaran',h.mapel+' – Paket '+h.paket_no],['Waktu',new Date(h.waktu).toLocaleString('id-ID')],['Nilai',h.skor],['Benar penuh',h.benar+' dari '+h.total]].forEach((r,i)=>{d.text(r[0],14,38+i*8);d.text(': '+r[1],55,38+i*8)});
 d.setFontSize(12);d.text('Rincian per soal (urutan asli)',14,112);d.setFontSize(10);
 h.detail.forEach((s,i)=>{const c=i%4,r=Math.floor(i/4);let yy;if(r<22)yy=120+r*7;else{const k=r-22;if(c==0&&k%36==0)d.addPage();yy=20+(k%36)*7}d.text((i+1)+'. '+(s>=1?'Benar':s>0?'Sebagian':'Salah'),14+c*48,yy)});
 const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setFontSize(9);d.setTextColor(120);d.text('Dikembangkan oleh: yulianto871',14,288)}
@@ -496,23 +498,24 @@ T(async()=>{const o=Object.assign({},E);delete o.stims;await call('soal_simpan',
 
 /* -- Hasil -- */
 async function aHasil(){const r=await call('hasil_list');window._H=r;
-$('#ap').innerHTML=`<div class="row"><p>${r.length} hasil tes</p><button class="btn sm" onclick="xl()">Unduh Spreadsheet (.xlsx)</button></div><div class="card tw"><table><tr><th>Waktu</th><th>Nama</th><th>Sekolah</th><th>Mapel</th><th>Paket</th><th>Nilai</th><th>Benar</th><th>Pelanggaran</th><th></th></tr>${r.map(x=>`<tr><td>${new Date(x.waktu).toLocaleString('id-ID')}</td><td>${esc(x.nama)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.mapel)}</td><td>${x.paket_no}</td><td><b>${x.skor}</b></td><td>${x.benar}/${x.total}</td><td>${x.pelanggaran?`<span class="pill pub">${x.pelanggaran}</span>`:'0'}${x.catatan||x.pelanggaran?` <button class="b2 sm" onclick="detH('${x.id}')">Detail</button>`:''}</td><td><button class="b2 sm" onclick="hapusH('${x.id}')">Hapus</button></td></tr>`).join('')}</table></div>`}
-function xl(){const rows=window._H.map(r=>({Waktu:new Date(r.waktu).toLocaleString('id-ID'),Nama:r.nama,Sekolah:r.sekolah,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,'Benar penuh':r.benar,'Jumlah soal':r.total,Pelanggaran:r.pelanggaran,Catatan:r.catatan}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Hasil');XLSX.writeFile(wb,'hasil_cbt_tka.xlsx')}
+$('#ap').innerHTML=`<div class="row"><p>${r.length} hasil tes</p><button class="btn sm" onclick="xl()">Unduh Spreadsheet (.xlsx)</button></div><div class="card tw"><table><tr><th>Waktu</th><th>Nama</th><th>Kecamatan</th><th>Sekolah</th><th>Kelas</th><th>Mapel</th><th>Paket</th><th>Nilai</th><th>Benar</th><th>Pelanggaran</th><th></th></tr>${r.map(x=>`<tr><td>${new Date(x.waktu).toLocaleString('id-ID')}</td><td>${esc(x.nama)}</td><td>${esc(x.kecamatan)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.kelas)}</td><td>${esc(x.mapel)}</td><td>${x.paket_no}</td><td><b>${x.skor}</b></td><td>${x.benar}/${x.total}</td><td>${x.pelanggaran?`<span class="pill pub">${x.pelanggaran}</span>`:'0'}${x.catatan||x.pelanggaran?` <button class="b2 sm" onclick="detH('${x.id}')">Detail</button>`:''}</td><td><button class="b2 sm" onclick="hapusH('${x.id}')">Hapus</button></td></tr>`).join('')}</table></div>`}
+function xl(){const rows=window._H.map(r=>({Waktu:new Date(r.waktu).toLocaleString('id-ID'),Nama:r.nama,Kecamatan:r.kecamatan,Sekolah:r.sekolah,Kelas:r.kelas,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,'Benar penuh':r.benar,'Jumlah soal':r.total,Pelanggaran:r.pelanggaran,Catatan:r.catatan}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Hasil');XLSX.writeFile(wb,'hasil_cbt_tka.xlsx')}
 function detH(id){const r=window._H.find(x=>x.id==id),L=Array.isArray(r.jejak)?r.jejak:[];modal(`<h3>Catatan Anti-Curang – ${esc(r.nama)}</h3><p>${esc(r.catatan||'Tidak ada catatan sistem.')}</p>${L.length?`<table><tr><th>Detik ke-</th><th>Kejadian</th></tr>${L.map(x=>`<tr><td>${esc(x.s)}</td><td>${esc(x.r)}</td></tr>`).join('')}</table>`:'<p>Tidak ada rincian pelanggaran.</p>'}`)}
 function hapusH(id){if(confirm('Hapus hasil ini?'))T(async()=>{await call('hasil_hapus',{id});aHasil()})}
 
 /* ===== Analisis Hasil (untuk evaluasi) ===== */
-let AN={rows:[],f:{mapel:'',nomor:'',sek:'',kkm:70},det:{},butir:null};
+let AN={rows:[],f:{mapel:'',nomor:'',kec:'',sek:'',kkm:70},det:{},butir:null};
 try{const k=parseInt(localStorage.getItem('kkm'));if(k>0)AN.f.kkm=k}catch(e){}
 const _avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0,_med=a=>{if(!a.length)return 0;const b=a.slice().sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2},_sd=a=>{if(a.length<2)return 0;const m=_avg(a);return Math.sqrt(a.reduce((t,x)=>t+(x-m)*(x-m),0)/a.length)},f1=x=>String(Math.round(x*10)/10);
 async function aAnalisis(){AN.rows=await call('hasil_list');if(!S.pkt.length)S.pkt=(await call('publik')).paket;anRender()}
-function anRows(){const f=AN.f;return AN.rows.filter(r=>(!f.mapel||r.mapel==f.mapel)&&(!f.nomor||r.paket_no==f.nomor)&&(!f.sek||r.sekolah==f.sek))}
+function anRows(){const f=AN.f;return AN.rows.filter(r=>(!f.mapel||r.mapel==f.mapel)&&(!f.nomor||r.paket_no==f.nomor)&&(!f.kec||r.kecamatan==f.kec)&&(!f.sek||r.sekolah==f.sek))}
 function anGrp(R,fn){const m={};R.forEach(r=>{const k=fn(r);(m[k]=m[k]||[]).push(r)});return Object.keys(m).map(k=>{const v=m[k].map(r=>r.skor);return{k,n:v.length,avg:_avg(v),min:Math.min(...v),max:Math.max(...v),tuntas:v.filter(x=>x>=AN.f.kkm).length/v.length*100}})}
-function anSet(k,v){AN.f[k]=v;if(k=='kkm'){try{localStorage.setItem('kkm',v)}catch(e){}}AN.butir=null;anRender()}
+function anSet(k,v){AN.f[k]=v;if(k=='kec')AN.f.sek='';if(k=='kkm'){try{localStorage.setItem('kkm',v)}catch(e){}}AN.butir=null;anRender()}
 const nmP=k=>k.replace(/Paket 0?(\d+)/,'Paket $1');
-function anRec(R,gs,gm){const o=[],n=R.length,sc=R.map(r=>r.skor),kkm=AN.f.kkm,tp=sc.filter(v=>v>=kkm).length/n*100,sd=_sd(sc);
+function anRec(R,gk,gs,gm){const o=[],n=R.length,sc=R.map(r=>r.skor),kkm=AN.f.kkm,tp=sc.filter(v=>v>=kkm).length/n*100,sd=_sd(sc);
 o.push(tp<50?`Ketuntasan rendah (${Math.round(tp)}% mencapai KKM ${kkm}). Disarankan pembelajaran ulang klasikal pada materi yang diujikan, bukan hanya remedial individu.`:tp<75?`Ketuntasan sedang (${Math.round(tp)}%). Rancang remedial untuk ${n-sc.filter(v=>v>=kkm).length} tes di bawah KKM, dan pengayaan untuk yang sudah tuntas.`:`Capaian baik (${Math.round(tp)}% tuntas). Pertahankan, dan beri pengayaan penalaran untuk peserta dengan nilai tertinggi.`);
 if(sd>20)o.push(`Sebaran nilai lebar (simpangan baku ${f1(sd)}): ada kesenjangan kemampuan, pertimbangkan pembelajaran berdiferensiasi atau kelompok belajar sebaya.`);else if(sd<8&&n>=10)o.push(`Nilai sangat seragam (simpangan baku ${f1(sd)}): periksa apakah soal terlalu mudah/sulit sehingga kurang membedakan kemampuan.`);
+const k3=gk.filter(x=>x.n>=3);if(k3.length>=2)o.push(`Kecamatan tertinggi: ${k3[0].k} (rata-rata ${f1(k3[0].avg)}); terendah: ${k3[k3.length-1].k} (${f1(k3[k3.length-1].avg)}). Prioritaskan pendampingan pada kecamatan terendah.`);
 const s3=gs.filter(x=>x.n>=3);if(s3.length>=2)o.push(`Sekolah dengan rata-rata terendah: ${s3.slice(-3).reverse().map(x=>x.k.replace(/ \(.*\)$/,'')+' ('+f1(x.avg)+')').join(', ')}.`);
 if(!AN.f.mapel){const m=anGrp(R,r=>r.mapel);if(m.length==2&&Math.abs(m[0].avg-m[1].avg)>=8){const lo=m[0].avg<m[1].avg?m[0]:m[1];o.push(`Capaian ${lo.k} (${f1(lo.avg)}) lebih rendah dibanding mapel lain; beri penguatan pada mapel ini.`)}}
 const pl=R.filter(r=>r.pelanggaran>0).length;if(pl)o.push(`${pl} tes (${Math.round(pl/n*100)}%) tercatat ada pelanggaran anti-curang. Tinjau di tab Hasil Tes → Detail sebelum nilai dijadikan dasar keputusan.`);
@@ -524,23 +527,25 @@ if(AN.butir.alpha!=null)o.push(`Reliabilitas paket (Cronbach α) = ${AN.butir.al
 else if(AN.f.mapel&&AN.f.nomor)o.push('Klik "Hitung analisis butir soal" di bawah untuk melihat soal yang sukar, daya pembeda, dan reliabilitas paket.');
 return o}
 function anRender(){const f=AN.f,R=anRows(),n=R.length,sc=R.map(r=>r.skor),kkm=f.kkm;
-const seks=[...new Set(AN.rows.map(r=>r.sekolah))].sort();
-let h=`<div class="card"><h2>📊 Analisis Hasil untuk Evaluasi</h2><p class="hint">Data dihitung dari seluruh hasil tes yang tersimpan. Gunakan filter untuk membandingkan mapel, paket, atau sekolah.</p>
+const kecs=[...new Set(AN.rows.map(r=>r.kecamatan))].sort(),seks=[...new Set(AN.rows.filter(r=>!f.kec||r.kecamatan==f.kec).map(r=>r.sekolah))].sort();
+let h=`<div class="card"><h2>📊 Analisis Hasil untuk Evaluasi</h2><p class="hint">Data dihitung dari seluruh hasil tes yang tersimpan. Gunakan filter untuk membandingkan mapel, paket, kecamatan, atau sekolah.</p>
 <div class="g2"><div><label class="f">Mata pelajaran</label><select onchange="anSet('mapel',this.value)"><option value="">Semua</option>${MAPEL.map(m=>`<option ${f.mapel==m?'selected':''}>${m}</option>`).join('')}</select></div>
 <div><label class="f">Paket</label><select onchange="anSet('nomor',this.value)"><option value="">Semua</option>${[1,2,3,4,5,6,7,8,9,10].map(x=>`<option value="${x}" ${f.nomor==x?'selected':''}>Paket ${x}</option>`).join('')}</select></div>
+<div><label class="f">Kecamatan</label><select onchange="anSet('kec',this.value)"><option value="">Semua</option>${kecs.map(x=>`<option value="${esc(x)}" ${f.kec==x?'selected':''}>${esc(x)}</option>`).join('')}</select></div>
 <div><label class="f">Sekolah</label><select onchange="anSet('sek',this.value)"><option value="">Semua</option>${seks.map(x=>`<option value="${esc(x)}" ${f.sek==x?'selected':''}>${esc(x)}</option>`).join('')}</select></div></div>
 <div class="row" style="margin-top:12px"><label style="font-weight:800">KKM / batas tuntas <input type="number" min="1" max="100" value="${kkm}" style="width:90px;display:inline-block" onchange="anSet('kkm',Math.min(100,Math.max(1,+this.value||70)))"></label><button class="btn sm" onclick="anXls()">⬇ Unduh Analisis (.xlsx)</button></div></div>`;
 if(!n){$('#ap').innerHTML=h+'<div class="card">Belum ada hasil tes untuk filter ini.</div>';return}
 const tun=sc.filter(v=>v>=kkm).length,pel=R.filter(r=>r.pelanggaran>0).length,bins=Array(10).fill(0);sc.forEach(v=>bins[Math.min(9,Math.floor(v/10))]++);const mb=Math.max(1,...bins);
-const gs=anGrp(R,r=>r.sekolah).sort((a,b)=>b.avg-a.avg),gm=anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1);
+const gk=anGrp(R,r=>r.kecamatan).sort((a,b)=>b.avg-a.avg),gs=anGrp(R,r=>r.sekolah+' ('+r.kecamatan+')').sort((a,b)=>b.avg-a.avg),gm=anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1);
 const gt=(g,c)=>`<div class="scr"><table><tr><th>${c}</th><th>Tes</th><th>Rata-rata</th><th>Min</th><th>Maks</th><th>% tuntas</th></tr>${g.map(x=>`<tr><td>${esc(nmP(x.k))}</td><td>${x.n}</td><td><b>${f1(x.avg)}</b></td><td>${x.min}</td><td>${x.max}</td><td><span class="tag ${x.tuntas>=75?'g':x.tuntas>=50?'y':''}">${Math.round(x.tuntas)}%</span></td></tr>`).join('')}</table></div>`;
 h+=`<div class="stats">${[['👥','Jumlah tes',n],['⭐','Rata-rata',f1(_avg(sc))],['📍','Median',f1(_med(sc))],['🔝','Tertinggi',Math.max(...sc)],['🔻','Terendah',Math.min(...sc)],['📏','Simpangan baku',f1(_sd(sc))],['✅','Tuntas (≥'+kkm+')',tun+' ('+Math.round(tun/n*100)+'%)'],['🔁','Perlu remedial',n-tun],['⚠','Ada pelanggaran',pel+' tes']].map(x=>`<div class="st"><span class="ic">${x[0]}</span><b style="font-size:26px">${x[2]}</b><span>${x[1]}</span></div>`).join('')}</div>
-<div class="card"><h3>💡 Rekomendasi Evaluasi</h3><ul style="line-height:1.7;margin:0;padding-left:20px">${anRec(R,gs,gm).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+<div class="card"><h3>💡 Rekomendasi Evaluasi</h3><ul style="line-height:1.7;margin:0;padding-left:20px">${anRec(R,gk,gs,gm).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
 <div class="card"><h3>Sebaran Nilai</h3><div class="hist">${bins.map(c=>`<div class="hc"><span>${c}</span><i style="height:${Math.round(c/mb*130)}px"></i></div>`).join('')}</div><div class="hist-l">${bins.map((c,i)=>`<span>${i*10}${i==9?'–100':'–'+(i*10+9)}</span>`).join('')}</div></div>
 <div class="card"><h3>Per Mata Pelajaran & Paket</h3>${gt(gm,'Mapel – Paket')}</div>
-<div class="card"><h3>Per Sekolah</h3>${gt(gs,'Sekolah')}</div>
+<div class="card"><h3>Per Kecamatan</h3>${gk.map(x=>`<div class="hb"><span class="nm">${esc(x.k)}</span><div class="tr"><i style="width:${x.avg}%"></i></div><b>${f1(x.avg)}</b><span class="hint" style="margin:0;width:54px">n=${x.n}</span></div>`).join('')}</div>
+<div class="card"><h3>Per Sekolah</h3>${gt(gs,'Sekolah (Kecamatan)')}</div>
 ${anButirHTML()}
-<div class="card"><h3>Peserta di Bawah KKM (${n-tun})</h3><p class="hint">Daftar untuk remedial, diurutkan dari nilai terendah (maksimal 100 baris; selengkapnya di unduhan .xlsx).</p><div class="scr"><table><tr><th>Nama</th><th>Sekolah</th><th>Mapel</th><th>Paket</th><th>Nilai</th></tr>${R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).slice(0,100).map(r=>`<tr><td>${esc(r.nama)}</td><td>${esc(r.sekolah)}</td><td>${esc(r.mapel)}</td><td>${r.paket_no}</td><td><b>${r.skor}</b></td></tr>`).join('')||'<tr><td colspan="5">Semua peserta mencapai KKM 🎉</td></tr>'}</table></div></div>`;
+<div class="card"><h3>Peserta di Bawah KKM (${n-tun})</h3><p class="hint">Daftar untuk remedial, diurutkan dari nilai terendah (maksimal 100 baris; selengkapnya di unduhan .xlsx).</p><div class="scr"><table><tr><th>Nama</th><th>Sekolah</th><th>Kelas</th><th>Mapel</th><th>Paket</th><th>Nilai</th></tr>${R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).slice(0,100).map(r=>`<tr><td>${esc(r.nama)}</td><td>${esc(r.sekolah)}</td><td>${esc(r.kelas)}</td><td>${esc(r.mapel)}</td><td>${r.paket_no}</td><td><b>${r.skor}</b></td></tr>`).join('')||'<tr><td colspan="6">Semua peserta mencapai KKM 🎉</td></tr>'}</table></div></div>`;
 $('#ap').innerHTML=h}
 function anButirHTML(){const f=AN.f;
 if(!f.mapel||!f.nomor)return `<div class="card"><h3>🔬 Analisis Butir Soal</h3><p class="hint">Pilih satu mata pelajaran dan satu paket pada filter di atas untuk menganalisis tiap soal (tingkat kesukaran, daya pembeda, reliabilitas).</p></div>`;
@@ -549,7 +554,7 @@ const tg=(c,t)=>`<span class="tag ${c}">${t}</span>`;
 return `<div class="card"><h3>🔬 Analisis Butir Soal – ${esc(f.mapel)} Paket ${f.nomor}</h3><p class="hint">Dihitung dari ${B.n} peserta${B.skip?` (${B.skip} tes dilewati karena jumlah soal berubah sejak tes dikerjakan)`:''}. ${B.n<30?'⚠ Peserta masih sedikit (<30); anggap hasil sebagai indikasi awal. ':''}Reliabilitas (Cronbach α): <b>${B.alpha==null?'-':B.alpha.toFixed(2)}</b>.</p>
 <div class="scr" style="max-height:520px"><table><tr><th>No</th><th>Jenis</th><th>Pertanyaan</th><th>Tingkat kesukaran</th><th>Daya pembeda</th><th>Saran</th></tr>${B.soal.map(x=>`<tr><td>${x.no}</td><td>${TIPE[x.tipe]||x.tipe}</td><td>${esc(x.q).slice(0,70)}</td><td>${Math.round(x.p*100)}% ${tg(x.p>.7?'y':x.p>=.3?'g':'',x.p>.7?'Mudah':x.p>=.3?'Sedang':'Sukar')}</td><td>${x.D==null?'-':x.D.toFixed(2)+' '+tg(x.D>=.3?'g':x.D>=.2?'y':'',x.D<0?'Periksa kunci':x.D>=.4?'Sangat baik':x.D>=.3?'Baik':x.D>=.2?'Cukup':'Revisi')}</td><td>${esc(x.rec)}</td></tr>`).join('')}</table></div></div>`}
 async function anButir(){const f=AN.f;T(async()=>{const pk=S.pkt.find(p=>p.mapel==f.mapel&&p.nomor==f.nomor);if(!pk)throw new Error('Paket tidak ditemukan.');
-const soal=await call('soal_list',{paket_id:pk.id}),R=AN.rows.filter(r=>r.mapel==f.mapel&&r.paket_no==f.nomor&&(!f.sek||r.sekolah==f.sek));
+const soal=await call('soal_list',{paket_id:pk.id}),R=AN.rows.filter(r=>r.mapel==f.mapel&&r.paket_no==f.nomor&&(!f.kec||r.kecamatan==f.kec)&&(!f.sek||r.sekolah==f.sek));
 if(!soal.length)throw new Error('Paket ini belum memiliki soal.');if(!R.length)throw new Error('Belum ada hasil untuk paket ini.');
 const need=R.filter(r=>!AN.det[r.id]);let done=0;const q=need.slice();
 await Promise.all(Array.from({length:6},async()=>{while(q.length){const r=q.shift();try{AN.det[r.id]=(await call('hasil',{id:r.id})).detail||[]}catch(e){AN.det[r.id]=[]}toast('Memuat jawaban '+(++done)+' dari '+need.length+'…',0,60000)}}));
@@ -566,9 +571,9 @@ function anXls(){const R=anRows();if(!R.length)return toast('Tidak ada data untu
 add('Ringkasan',[['Jumlah tes',R.length],['Rata-rata',+f1(_avg(sc))],['Median',_med(sc)],['Tertinggi',Math.max(...sc)],['Terendah',Math.min(...sc)],['Simpangan baku',+f1(_sd(sc))],['KKM',kkm],['Tuntas',sc.filter(v=>v>=kkm).length],['Perlu remedial',sc.filter(v=>v<kkm).length],['Tes dengan pelanggaran',R.filter(r=>r.pelanggaran>0).length]].map(x=>({Indikator:x[0],Nilai:x[1]})));
 const bins=Array(10).fill(0);sc.forEach(v=>bins[Math.min(9,Math.floor(v/10))]++);add('Sebaran Nilai',bins.map((c,i)=>({Rentang:i*10+(i==9?'-100':'-'+(i*10+9)),Jumlah:c})));
 const gx=g=>g.map(x=>({Kelompok:nmP(x.k),Tes:x.n,'Rata-rata':+f1(x.avg),Min:x.min,Maks:x.max,'% Tuntas':Math.round(x.tuntas)}));
-add('Per Mapel-Paket',gx(anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1)));add('Per Sekolah',gx(anGrp(R,r=>r.sekolah).sort((a,b)=>b.avg-a.avg)));
+add('Per Mapel-Paket',gx(anGrp(R,r=>r.mapel+' – Paket '+String(r.paket_no).padStart(2,'0')).sort((a,b)=>a.k<b.k?-1:1)));add('Per Kecamatan',gx(anGrp(R,r=>r.kecamatan).sort((a,b)=>b.avg-a.avg)));add('Per Sekolah',gx(anGrp(R,r=>r.sekolah+' ('+r.kecamatan+')').sort((a,b)=>b.avg-a.avg)));
 if(AN.butir)add('Analisis Butir',AN.butir.soal.map(x=>({No:x.no,Jenis:TIPE[x.tipe]||x.tipe,Pertanyaan:x.q,'Tingkat kesukaran':+x.p.toFixed(2),'Daya pembeda':x.D==null?'':+x.D.toFixed(2),Saran:x.rec})));
-add('Perlu Remedial',R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).map(r=>({Nama:r.nama,Sekolah:r.sekolah,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,Pelanggaran:r.pelanggaran})));
+add('Perlu Remedial',R.filter(r=>r.skor<kkm).sort((a,b)=>a.skor-b.skor).map(r=>({Nama:r.nama,Kecamatan:r.kecamatan,Sekolah:r.sekolah,Kelas:r.kelas,Mapel:r.mapel,Paket:r.paket_no,Nilai:r.skor,Pelanggaran:r.pelanggaran})));
 XLSX.writeFile(wb,'analisis_hasil_cbt_tka.xlsx')}
 
 /* -- Anggota -- */
@@ -576,7 +581,7 @@ async function aAgt(){const [a,p]=await Promise.all([call('admin_list'),call('pe
 $('#ap').innerHTML=`<div class="card"><h2>Admin</h2><div class="tw"><table><tr><th>Username</th><th>Nama</th><th></th></tr>${a.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.nama)}</td><td><button class="b2 sm" onclick="hapusA('${esc(x.username)}')">Hapus</button></td></tr>`).join('')}</table></div>
 <h3 style="margin-top:16px">Tambah admin</h3><div class="g2"><div><label class="f">Username</label><input id="a_u"></div><div><label class="f">Nama</label><input id="a_n"></div></div><label class="f">Password (min. 6 karakter)</label><input id="a_p" type="password"><p><button class="btn sm" onclick="tambahA()">Tambah Admin</button></p>
 <h3>Ganti password saya</h3><div class="g2"><div><input id="g_l" type="password" placeholder="Password lama"></div><div><input id="g_b" type="password" placeholder="Password baru"></div></div><p><button class="b2 sm" onclick="gantiP()">Ganti Password</button></p></div>
-<div class="card"><h2>Peserta (${p.length})</h2><div class="tw"><table><tr><th>Nama</th><th>Sekolah</th><th></th></tr>${p.map(x=>`<tr><td>${esc(x.nama)}</td><td>${esc(x.sekolah)}</td><td><button class="b2 sm" onclick="hapusP('${x.id}')">Hapus</button></td></tr>`).join('')}</table></div></div>`}
+<div class="card"><h2>Peserta (${p.length})</h2><div class="tw"><table><tr><th>Nama</th><th>Kecamatan</th><th>Sekolah</th><th>Kelas</th><th></th></tr>${p.map(x=>`<tr><td>${esc(x.nama)}</td><td>${esc(x.kecamatan)}</td><td>${esc(x.sekolah)}</td><td>${esc(x.kelas)}</td><td><button class="b2 sm" onclick="hapusP('${x.id}')">Hapus</button></td></tr>`).join('')}</table></div></div>`}
 function tambahA(){T(async()=>{await call('admin_tambah',{username:$('#a_u').value,nama:$('#a_n').value,password:$('#a_p').value});toast('Admin ditambahkan');aAgt()})}
 function hapusA(u){if(confirm('Hapus admin '+u+'?'))T(async()=>{await call('admin_hapus',{username:u});aAgt()})}
 function hapusP(id){if(confirm('Hapus peserta beserta nilainya?'))T(async()=>{await call('peserta_hapus',{id});aAgt()})}
